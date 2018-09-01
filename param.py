@@ -10,7 +10,7 @@
 # associated with the same z, have the same number of cells (length
 # becomes slightly larger as layer index increases).
 # Circles on the internal surface are
-# separated by 200 um normal to the gradient. The inside layer circle closest
+# separated by 300 um normal to the gradient. The inside layer circle closest
 # to the tip has radius of 500 um.
 
 # Connections between layers and along a circle are obvious.
@@ -18,7 +18,7 @@
 nominal_height = 50000.
 nominal_base_radius = 15000.
 hole_radius = 500.
-internal_surface_circle_distance = 200.
+internal_surface_circle_distance = 300.
 layer_width = 30.
 n_layer = 5
 nominal_cell_length = 100.

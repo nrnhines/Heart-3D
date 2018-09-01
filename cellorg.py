@@ -31,6 +31,43 @@ def morphorg():
   npts = [circle0_n(pt) for pt in paraboloid[0]]
   return paraboloid, npts
 
+paraboloid, npts = morphorg()
+nlayer = len(paraboloid)
+nlayerpts = sum(npts)
+ncircle = len(paraboloid[0])
+ngid = nlayerpts*nlayer
+circle_offset = [0]
+for npt in npts:
+  circle_offset.append(circle_offset[-1] + npt)
+
+def org2gid(ilayer, icircle, ipt):
+  gid = ilayer*nlayerpts + circle_offset[icircle] + ipt
+  return gid
+  
+def gid2org(gid):
+  ilayer = int(gid/nlayerpts)
+  r = gid - ilayer*nlayerpts
+  icircle = gid2org_help_(r)
+  ipt = r - circle_offset[icircle]
+  return ilayer, icircle, ipt
+
+itermax=0
+
+def gid2org_help_(r): # return last i where circle_offset[i] <= r
+  # note npts is concave
+  # something like a discrete newton method can work with decreasing indices
+  # No more than 7 iterations.
+  i = len(npts) - 1
+  iter = 0
+  while True:
+    if circle_offset[i] <= r:
+      break
+    i -= int((circle_offset[i] - r)/npts[i]) + 1
+    iter += 1
+  global itermax
+  if iter > itermax: itermax = iter
+  return i
+
 def test1():
   #iterate over all points
   paraboloid, npts = morphorg()
@@ -39,6 +76,9 @@ def test1():
       n = npts[icircle]
       for ipt, pt in enumerate(circle_discrete(n, circle)):
         # do something with ilayer, icircle, ipt
+        gid = org2gid(ilayer, icircle, ipt)
+        org = gid2org(gid)
+        assert(org == (ilayer, icircle, ipt))
         pass
 
 if __name__ == "__main__":
