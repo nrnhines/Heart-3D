@@ -68,6 +68,14 @@ def gid2org_help_(r): # return last i where circle_offset[i] <= r
   if iter > itermax: itermax = iter
   return i
 
+def xyz(ilayer, icircle, ipt):
+  n = npts[icircle]
+  ipt = ipt%n # wrap around
+  pt = paraboloid[ilayer][icircle]
+  a = 2*pi*ipt/n
+  r = pt[0]
+  return r*sin(a), r*cos(a), pt[2]
+
 def test1():
   #iterate over all points
   paraboloid, npts = morphorg()
