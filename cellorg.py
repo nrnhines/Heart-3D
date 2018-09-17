@@ -68,13 +68,21 @@ def gid2org_help_(r): # return last i where circle_offset[i] <= r
   if iter > itermax: itermax = iter
   return i
 
-def xyz(ilayer, icircle, ipt):
+def xyz(ilayer, icircle, ipt): # note that ipt refers to the proximal point on the section
   n = npts[icircle]
   ipt = ipt%n # wrap around
   pt = paraboloid[ilayer][icircle]
   a = 2*pi*ipt/n
   r = pt[0]
   return r*sin(a), r*cos(a), pt[2]
+
+def ipt2angle(ipt, icircle):
+  n = npts[icircle]
+  return 2*pi*ipt/n
+
+def angle2ipt(angle, icircle): #ipt that contains angle (note that ipt refers to the proximal point on the section)
+  n = npts[icircle]
+  return int(angle*n/(2*pi))%n
 
 def test1():
   #iterate over all points
