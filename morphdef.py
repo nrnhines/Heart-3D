@@ -50,7 +50,7 @@ def next_circle_origin(sep, p1):
 
 def outer_layer_origins(i_layer, origins):
   o = []
-  d = i_layer * p.layer_width
+  d = i_layer * p.thickness/(p.n_layer - 1)
   for pt in origins:
     g = (2.*p.abc[0]*pt[0], 0.0, -p.abc[2])
     norm = distance(g, (0., 0., 0.))

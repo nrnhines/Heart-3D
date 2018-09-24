@@ -168,8 +168,13 @@ def angle2ipt(angle, icircle): #ipt that contains angle (note that ipt refers to
   return int(angle*n/(2*pi))%n
 
 def test1():
+  from time import time
   #iterate over all points
+  t = time()
   paraboloid, npts = morphorg()
+  print ("morphorg time %g" % (time() - t,))
+  t = time()
+  cnt=0
   for ilayer, layer in enumerate(paraboloid):
     for icircle, circle in enumerate(layer):
       n = npts[icircle]
@@ -178,7 +183,19 @@ def test1():
         gid = org2gid(ilayer, icircle, ipt)
         org = gid2org(gid)
         assert(org == (ilayer, icircle, ipt))
+        cnt += 1
         pass
+  print ("visit all %d points time %g" % (cnt, (time() - t)))
+
+  t = time()
+  cnt = 0
+  for ilayer in range(nlayer):
+    for icircle in range(ncircle - 1):
+      for ipt in range(npts[icircle]):
+        o = overlap((ilayer, icircle, ipt), icircle + 1)
+        cnt += len(o)
+  print ("all %d circle to circle connections time %g" % (cnt, (time() - t)))
+
 
 def test2(layer, circle, ipt):
   print(layer, circle, ipt)
@@ -198,8 +215,21 @@ def test2(layer, circle, ipt):
       print([layer, c, x[0]], xyz(layer, c, x[0]))
   print ()
 
+def test3(l1, c1, c2):
+  # sum of all fractions around each circle should total npts for the circle
+  n1 = npts[c1]
+  n2 = npts[c2]
+  s1 = 0.
+  s2 = 0.
+  for i in range(n1):
+    a = overlap((l1, c1, i), c2)
+    for o in a:
+      s1 += o[1]
+      s2 += o[2]
+  print("ll=%d c1=%d c2=%d n1=%d n2=%d s1=%g s2=%g" % (l1, c1, c2, n1, n2, s1, s2))
+
 if __name__ == "__main__":
-  #test1()
+  test1()
   c = 1
   n = npts[c]
   test2(1, c, 0)
@@ -208,3 +238,5 @@ if __name__ == "__main__":
   test2(1, c, 1)
   test2(1, c, n-2)
 
+  test3(1, 0, 1)
+  test3(4, 101, 100)

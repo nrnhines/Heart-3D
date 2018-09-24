@@ -4,7 +4,8 @@ from cellorg import angle2ipt, ipt2angle
 from morphdef import distance
 
 class View():
-  def __init__(self, pts):
+  def __init__(self, pts, master=True):
+    self.master = master
     diam = p.cell_diameter
     self.pts = pts
     self.sections = {}
@@ -25,6 +26,9 @@ class View():
       self.sl.append(sec=sec)
     self.sh = h.Shape(self.sl)
     self.sh.menu_tool("print info", self.callback)
+    if not master:
+      for sec in self.sections:
+        self.sh.color(gid2org(self.sections[sec])[0] + 1, sec=sec)
 
   def callback(self, type, x, y, keystate):
     #info about nearest section to mouse
@@ -40,7 +44,8 @@ class View():
         x,y,z = xyz(ilayer, icircle, ipt)
         print ("gid %d   id (%d, %d, %d) prox pt at (%g, %g, %g) length %g"%(gid, ilayer, icircle, ipt, x, y, z, sec.L))
         h.pop_section()
-        neighborhood(ilayer, icircle, ipt)
+        if self.master:
+          neighborhood(ilayer, icircle, ipt)
 
 def neighborhood(ilayer, icircle, ipt):
   global focusedview
@@ -55,7 +60,7 @@ def neighborhood(ilayer, icircle, ipt):
       kpt = angle2ipt(angle, jcircle)
       for jpt in [i%npt for i in range(kpt-n, kpt+1 + n)]:
         pts.append((jlayer, jcircle, jpt))
-  focusedview = View(pts)
+  focusedview = View(pts, master=False)
 	
 def test1(): # tip and base
   pts = []
