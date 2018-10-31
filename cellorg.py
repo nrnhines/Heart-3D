@@ -28,48 +28,58 @@ def morphorg():
   paraboloid = [circle_origins(sep, rstart, zend)]
   for i in range(1, p.n_layer):
     paraboloid.append(outer_layer_origins(i, paraboloid[0]))
-  npts = [circle0_n(pt) for pt in paraboloid[0]]
+  npts = [[circle0_n(pt) for pt in paraboloid[i]] for i in range(p.n_layer)]
   return paraboloid, npts
 
 paraboloid, npts = morphorg()
 nlayer = len(paraboloid)
-nlayerpts = sum(npts)
-ncircle = len(paraboloid[0])
-ngid = nlayerpts*nlayer
-circle_offset = [0]
-for npt in npts:
-  circle_offset.append(circle_offset[-1] + npt)
+nlayerpts = [sum(npts[i]) for i in range(p.n_layer)]
+ncircle = [len(paraboloid[i]) for i in range(p.n_layer)]
+ngid = sum(nlayerpts)
+circle_offset = [[0] for i in range(p.n_layer)]
+layer_offset = [0]
+for ilayer in range(p.n_layer):
+  for npt in npts[ilayer]:
+    circle_offset[ilayer].append(circle_offset[ilayer][-1] + npt)
+  layer_offset.append(layer_offset[-1] + circle_offset[ilayer][-1])
 
 def org2gid(ilayer, icircle, ipt):
-  gid = ilayer*nlayerpts + circle_offset[icircle] + ipt
+  gid = layer_offset[ilayer] + circle_offset[ilayer][icircle] + ipt
   return gid
   
 def gid2org(gid):
-  ilayer = int(gid/nlayerpts)
-  r = gid - ilayer*nlayerpts
-  icircle = gid2org_help_(r)
-  ipt = r - circle_offset[icircle]
+  ilayer = gid2layer(gid)
+  r = gid - layer_offset[ilayer]
+  icircle = gid2org_help_circle(ilayer, r)
+  ipt = r - circle_offset[ilayer][icircle]
   return ilayer, icircle, ipt
 
 itermax=0
 
-def gid2org_help_(r): # return last i where circle_offset[i] <= r
+def gid2layer(gid): # return last i where layer_offset[i] <= gid
+  # ugh linear search
+  for i in range(1, p.n_layer + 1):
+    if gid > layer_offset[i]:
+      return i - 1
+  assert(False)
+
+def gid2org_help_circle(ilayer, r): # return last i where circle_offset[i] <= r
   # note npts is concave
   # something like a discrete newton method can work with decreasing indices
   # No more than 7 iterations.
-  i = len(npts) - 1
+  i = len(npts[ilayer]) - 1
   iter = 0
   while True:
-    if circle_offset[i] <= r:
+    if circle_offset[ilayer][i] <= r:
       break
-    i -= int((circle_offset[i] - r)/npts[i]) + 1
+    i -= int((circle_offset[ilayer][i] - r)/npts[ilayer][i]) + 1
     iter += 1
   global itermax
   if iter > itermax: itermax = iter
   return i
 
 def xyz(ilayer, icircle, ipt): # note that ipt refers to the proximal point on the section
-  n = npts[icircle]
+  n = npts[ilayer][icircle]
   ipt = ipt%n # wrap around
   pt = paraboloid[ilayer][icircle]
   a = 2*pi*ipt/n
@@ -91,6 +101,7 @@ def xyz_center(ilayer, icircle, ipt):
 def overlap(pt, circle):
   deb=False
   if deb: print("\nenter overlap ", pt, circle)
+  ilayer = pt[0]
   result = []
   pcircle = pt[1]
   ipt = pt[2]
@@ -105,7 +116,7 @@ def overlap(pt, circle):
   imax = angle2ipt(amax, circle) # imax contain amax
   aimax = ipt2angle(imax, circle)# angle of imax
   if imax < imin:
-   imax = npts[circle]
+   imax = npts[ilayer][circle]
    amax = 2*pi
    aimax = 2*pi
 
@@ -115,7 +126,7 @@ def overlap(pt, circle):
   if aimax < amax: #ipt subtends some of the current imax section
     imax += 1 # could be npt and therefore refer to 0
     aimax = ipt2angle(imax, circle) # could be 2pi less than true angle
-    if imax == npts[circle]:
+    if imax == npts[ilayer][circle]:
       aimax = 2*pi
   if deb: print("imin=%d aimin=%g imax=%d aimax=%g" %(imin, aimin, imax, aimax))
 
@@ -158,13 +169,13 @@ def fracangle(a, a0):
   phi = a - theta
   return 0.5*(1.0 + tan(phi)/tan(theta))
 
-def ipt2angle(ipt, icircle):
-  n = npts[icircle]
+def ipt2angle(ipt, ilayer, icircle):
+  n = npts[ilayer][icircle]
   ipt = ipt%n # occasionally convenient for ipt = -1
   return 2*pi*ipt/n
 
-def angle2ipt(angle, icircle): #ipt that contains angle (note that ipt refers to the proximal point on the section)
-  n = npts[icircle]
+def angle2ipt(angle, ilayer, icircle): #ipt that contains angle (note that ipt refers to the proximal point on the section)
+  n = npts[ilayer][icircle]
   return int(angle*n/(2*pi))%n
 
 def test1():
@@ -177,7 +188,7 @@ def test1():
   cnt=0
   for ilayer, layer in enumerate(paraboloid):
     for icircle, circle in enumerate(layer):
-      n = npts[icircle]
+      n = npts[ilayer][icircle]
       for ipt, pt in enumerate(circle_discrete(n, circle)):
         # do something with ilayer, icircle, ipt
         gid = org2gid(ilayer, icircle, ipt)
@@ -191,7 +202,7 @@ def test1():
   cnt = 0
   for ilayer in range(nlayer):
     for icircle in range(ncircle - 1):
-      for ipt in range(npts[icircle]):
+      for ipt in range(npts[ilayer][icircle]):
         o = overlap((ilayer, icircle, ipt), icircle + 1)
         cnt += len(o)
   print ("all %d circle to circle connections time %g" % (cnt, (time() - t)))
@@ -199,7 +210,7 @@ def test1():
 
 def test2(layer, circle, ipt):
   print(layer, circle, ipt)
-  print("npts ", npts[circle], npts[circle+1])
+  print("npts ", npts[ilayer][circle], npts[ilayer][circle+1])
   a = overlap((layer, circle, ipt), circle + 1)
   print(a)
   for x in a:
@@ -217,8 +228,8 @@ def test2(layer, circle, ipt):
 
 def test3(l1, c1, c2):
   # sum of all fractions around each circle should total npts for the circle
-  n1 = npts[c1]
-  n2 = npts[c2]
+  n1 = npts[l1][c1]
+  n2 = npts[l1][c2]
   s1 = 0.
   s2 = 0.
   for i in range(n1):
@@ -237,8 +248,8 @@ def test4():
   #for j, layer in enumerate([0, nlayer-1]):
   for j, layer in enumerate(range(nlayer)):
     p0 = xyz(layer, 0, 0)
-    d_surf = [distance(xyz(layer, i, 0), p0) for i in range(1, ncircle)]
-    d_circle = [distance(xyz(layer, i, 0), xyz(layer, i-1, 0)) for i in range(1, ncircle)]
+    d_surf = [distance(xyz(layer, i, 0), p0) for i in range(1, ncircle[layer])]
+    d_circle = [distance(xyz(layer, i, 0), xyz(layer, i-1, 0)) for i in range(1, ncircle[layer])]
     print(d_circle, d_surf)
     h.Vector(d_circle).line(g1, h.Vector(d_surf), j+1, 2)
   return g1, g2
@@ -248,7 +259,7 @@ if __name__ == "__main__":
   #test1()
   if False:
     c = 1
-    n = npts[c]
+    n = npts[0][c]
     test2(1, c, 0)
     test2(1, c, n-1)
     print ()
