@@ -51,13 +51,13 @@ def neighborhood(ilayer, icircle, ipt):
   global focusedview
   x,y,z = xyz(ilayer, icircle, ipt)
   gid = org2gid(ilayer, icircle, ipt)  
-  angle = ipt2angle(ipt, icircle)
+  angle = ipt2angle(ipt, ilayer, icircle)
   pts = []
   for jlayer in range(nlayer):
-    for jcircle in range(max([icircle - 5, 0]), min([icircle + 1 + 5, ncircle])):
-      npt = npts[jcircle]
-      n = min([int(npts[jcircle]/2), 5])
-      kpt = angle2ipt(angle, jcircle)
+    for jcircle in range(max([icircle - 5, 0]), min([icircle + 1 + 5, ncircle[jlayer]])):
+      npt = npts[jlayer][jcircle]
+      n = min([int(npts[jlayer][jcircle]/2), 5])
+      kpt = angle2ipt(angle, jlayer, jcircle)
       for jpt in [i%npt for i in range(kpt-n, kpt+1 + n)]:
         pts.append((jlayer, jcircle, jpt))
   focusedview = View(pts, master=False)
@@ -65,16 +65,16 @@ def neighborhood(ilayer, icircle, ipt):
 def test1(): # tip and base
   pts = []
   for ilayer in range(nlayer):
-    for icircle in list(range(10)) + list(range(ncircle-5, ncircle)):
-      for ipt in range(npts[icircle]):
+    for icircle in list(range(10)) + list(range(ncircle[ilayer]-5, ncircle[ilayer])):
+      for ipt in range(npts[ilayer][icircle]):
         pts.append((ilayer, icircle, ipt))
   return View(pts)
 
 def test2():
   pts = []
   for ilayer in range(1):
-    for icircle in range(0, ncircle):
-      for ipt in range(0, npts[icircle], 5):
+    for icircle in range(ncircle[ilayer]):
+      for ipt in range(0, npts[ilayer][icircle], 5):
         pts.append((ilayer, icircle, ipt))
   return View(pts)
 

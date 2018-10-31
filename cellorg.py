@@ -59,7 +59,7 @@ itermax=0
 def gid2layer(gid): # return last i where layer_offset[i] <= gid
   # ugh linear search
   for i in range(1, p.n_layer + 1):
-    if gid > layer_offset[i]:
+    if gid < layer_offset[i]:
       return i - 1
   assert(False)
 
@@ -105,16 +105,16 @@ def overlap(pt, circle):
   result = []
   pcircle = pt[1]
   ipt = pt[2]
-  aesc = ipt2angle(1, circle) # angle of each section on circle
-  aesp = ipt2angle(1, pcircle) # angle of each section on pcircle
+  aesc = ipt2angle(1, ilayer, circle) # angle of each section on circle
+  aesp = ipt2angle(1, ilayer, pcircle) # angle of each section on pcircle
 
-  amin = ipt2angle(ipt, pcircle) # angle of pt on it's own circle is the angle on circle
-  imin = angle2ipt(amin, circle) # imin contains amin
-  aimin = ipt2angle(imin, circle)# angle of imin
+  amin = ipt2angle(ipt, ilayer, pcircle) # angle of pt on it's own circle is the angle on circle
+  imin = angle2ipt(amin, ilayer, circle) # imin contains amin
+  aimin = ipt2angle(imin, ilayer, circle)# angle of imin
 
-  amax = ipt2angle(ipt + 1, pcircle)
-  imax = angle2ipt(amax, circle) # imax contain amax
-  aimax = ipt2angle(imax, circle)# angle of imax
+  amax = ipt2angle(ipt + 1, ilayer, pcircle)
+  imax = angle2ipt(amax, ilayer, circle) # imax contain amax
+  aimax = ipt2angle(imax, ilayer, circle)# angle of imax
   if imax < imin:
    imax = npts[ilayer][circle]
    amax = 2*pi
@@ -125,7 +125,7 @@ def overlap(pt, circle):
 
   if aimax < amax: #ipt subtends some of the current imax section
     imax += 1 # could be npt and therefore refer to 0
-    aimax = ipt2angle(imax, circle) # could be 2pi less than true angle
+    aimax = ipt2angle(imax, ilayer, circle) # could be 2pi less than true angle
     if imax == npts[ilayer][circle]:
       aimax = 2*pi
   if deb: print("imin=%d aimin=%g imax=%d aimax=%g" %(imin, aimin, imax, aimax))
@@ -133,11 +133,11 @@ def overlap(pt, circle):
   for i in range(imin, imax): # the sections on circle that are involved
     if deb: print("begin i=%d"%i)
     # ipt section subtend fraction on circle sections
-    aicprox = ipt2angle(i, circle)
+    aicprox = ipt2angle(i, ilayer, circle)
     fcprox = 0.0 # beginning overlap distance of ipt on i section of circle
     if aicprox < amin: # fcprox > 0
       fcprox = fracangle(amin - aicprox, aesc)
-    aicdist = ipt2angle(i + 1, circle)
+    aicdist = ipt2angle(i + 1, ilayer, circle)
     if aicdist < aicprox:
       aicdist += 2*pi
     fcdist = 1.0 # ending overlap distance of ipt on i section of circle
@@ -217,8 +217,8 @@ def test2(layer, circle, ipt):
     b = overlap((layer, circle + 1, x[0]), circle)
     print(b)
 
-  print("length d_angle of circle ", circle, distance(xyz(layer, circle, 0), xyz(layer, circle, 1)), ipt2angle(1, circle))
-  print("length d_angle of circle ", circle+1, distance(xyz(layer, circle+1, 0), xyz(layer, circle+1, 1)), ipt2angle(1, circle+1))
+  print("length d_angle of circle ", circle, distance(xyz(layer, circle, 0), xyz(layer, circle, 1)), ipt2angle(1, layer, circle))
+  print("length d_angle of circle ", circle+1, distance(xyz(layer, circle+1, 0), xyz(layer, circle+1, 1)), ipt2angle(1, layer, circle+1))
   
   for i, y in enumerate([a, b]):
     c = circle+(1-i)
