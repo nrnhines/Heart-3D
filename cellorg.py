@@ -92,31 +92,32 @@ def xyz_center(ilayer, icircle, ipt):
  return (x1 + x2)/2., (y1 + y2)/2., (z1 + z2)/2.
 
 #fractional edge overlap between (ilayer, icircle, ipt) pt1 and
+# the relevant points in layer, circle
 # the overlapping circle sections
-# assume same layer, return (overlap1, overlap2) where overlaps are the
+# return (overlap1, overlap2) where overlaps are the
 # fractional length of sections pt1 and pt2. Note, because circles have
-# different circumference a section in pcircle can subtend a one or more
+# different circumference a section in icircle can subtend a one or more
 # sections in circle. Return a list of 3tuples where each tuple is
 # i on circle, fractional overlap of ipt on i, fractional overlap of i on ipt)
-def overlap(pt, circle):
+def overlap(pt, layer, circle):
   deb=False
   if deb: print("\nenter overlap ", pt, circle)
-  ilayer = pt[0]
   result = []
-  pcircle = pt[1]
+  ilayer = pt[0]
+  icircle = pt[1]
   ipt = pt[2]
-  aesc = ipt2angle(1, ilayer, circle) # angle of each section on circle
-  aesp = ipt2angle(1, ilayer, pcircle) # angle of each section on pcircle
+  aesc = ipt2angle(1, layer, circle) # angle of each section on circle
+  aesp = ipt2angle(1, ilayer, icircle) # angle of each section on pcircle
 
-  amin = ipt2angle(ipt, ilayer, pcircle) # angle of pt on it's own circle is the angle on circle
-  imin = angle2ipt(amin, ilayer, circle) # imin contains amin
-  aimin = ipt2angle(imin, ilayer, circle)# angle of imin
+  amin = ipt2angle(ipt, ilayer, icircle) # angle of pt on it's own circle is the angle on circle
+  imin = angle2ipt(amin, layer, circle) # imin contains amin
+  aimin = ipt2angle(imin, layer, circle)# angle of imin
 
-  amax = ipt2angle(ipt + 1, ilayer, pcircle)
-  imax = angle2ipt(amax, ilayer, circle) # imax contain amax
-  aimax = ipt2angle(imax, ilayer, circle)# angle of imax
+  amax = ipt2angle(ipt + 1, ilayer, icircle)
+  imax = angle2ipt(amax, layer, circle) # imax contain amax
+  aimax = ipt2angle(imax, layer, circle)# angle of imax
   if imax < imin:
-   imax = npts[ilayer][circle]
+   imax = npts[layer][circle]
    amax = 2*pi
    aimax = 2*pi
 
@@ -125,19 +126,19 @@ def overlap(pt, circle):
 
   if aimax < amax: #ipt subtends some of the current imax section
     imax += 1 # could be npt and therefore refer to 0
-    aimax = ipt2angle(imax, ilayer, circle) # could be 2pi less than true angle
-    if imax == npts[ilayer][circle]:
+    aimax = ipt2angle(imax, layer, circle) # could be 2pi less than true angle
+    if imax == npts[layer][circle]:
       aimax = 2*pi
   if deb: print("imin=%d aimin=%g imax=%d aimax=%g" %(imin, aimin, imax, aimax))
 
   for i in range(imin, imax): # the sections on circle that are involved
     if deb: print("begin i=%d"%i)
     # ipt section subtend fraction on circle sections
-    aicprox = ipt2angle(i, ilayer, circle)
+    aicprox = ipt2angle(i, layer, circle)
     fcprox = 0.0 # beginning overlap distance of ipt on i section of circle
     if aicprox < amin: # fcprox > 0
       fcprox = fracangle(amin - aicprox, aesc)
-    aicdist = ipt2angle(i + 1, ilayer, circle)
+    aicdist = ipt2angle(i + 1, layer, circle)
     if aicdist < aicprox:
       aicdist += 2*pi
     fcdist = 1.0 # ending overlap distance of ipt on i section of circle
@@ -211,10 +212,10 @@ def test1():
 def test2(layer, circle, ipt):
   print(layer, circle, ipt)
   print("npts ", npts[ilayer][circle], npts[ilayer][circle+1])
-  a = overlap((layer, circle, ipt), circle + 1)
+  a = overlap((layer, circle, ipt), layer, circle + 1)
   print(a)
   for x in a:
-    b = overlap((layer, circle + 1, x[0]), circle)
+    b = overlap((layer, circle + 1, x[0]), layer, circle)
     print(b)
 
   print("length d_angle of circle ", circle, distance(xyz(layer, circle, 0), xyz(layer, circle, 1)), ipt2angle(1, layer, circle))
@@ -233,7 +234,7 @@ def test3(l1, c1, c2):
   s1 = 0.
   s2 = 0.
   for i in range(n1):
-    a = overlap((l1, c1, i), c2)
+    a = overlap((l1, c1, i), l1, c2)
     for o in a:
       s1 += o[1]
       s2 += o[2]
@@ -257,7 +258,7 @@ def test4():
 if __name__ == "__main__":
  
   #test1()
-  if False:
+  if True:
     c = 1
     n = npts[0][c]
     test2(1, c, 0)
@@ -266,8 +267,8 @@ if __name__ == "__main__":
     test2(1, c, 1)
     test2(1, c, n-2)
 
-  #test3(1, 0, 1)
-  #test3(4, 101, 100)
+  test3(1, 0, 1)
+  test3(4, 101, 100)
 
-  a = test4()
+  #a = test4()
 
