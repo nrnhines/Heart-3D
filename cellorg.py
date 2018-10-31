@@ -228,15 +228,35 @@ def test3(l1, c1, c2):
       s2 += o[2]
   print("ll=%d c1=%d c2=%d n1=%d n2=%d s1=%g s2=%g" % (l1, c1, c2, n1, n2, s1, s2))
 
-if __name__ == "__main__":
-  test1()
-  c = 1
-  n = npts[c]
-  test2(1, c, 0)
-  test2(1, c, n-1)
-  print ()
-  test2(1, c, 1)
-  test2(1, c, n-2)
+def test4():
+  from neuron import h, gui
+  # distance between circles as function of surface distance for
+  # inner and outemost layers. Also length of cells.
+  g1 = h.Graph()
+  g2 = h.Graph()
+  #for j, layer in enumerate([0, nlayer-1]):
+  for j, layer in enumerate(range(nlayer)):
+    p0 = xyz(layer, 0, 0)
+    d_surf = [distance(xyz(layer, i, 0), p0) for i in range(1, ncircle)]
+    d_circle = [distance(xyz(layer, i, 0), xyz(layer, i-1, 0)) for i in range(1, ncircle)]
+    print(d_circle, d_surf)
+    h.Vector(d_circle).line(g1, h.Vector(d_surf), j+1, 2)
+  return g1, g2
 
-  test3(1, 0, 1)
-  test3(4, 101, 100)
+if __name__ == "__main__":
+ 
+  #test1()
+  if False:
+    c = 1
+    n = npts[c]
+    test2(1, c, 0)
+    test2(1, c, n-1)
+    print ()
+    test2(1, c, 1)
+    test2(1, c, n-2)
+
+  #test3(1, 0, 1)
+  #test3(4, 101, 100)
+
+  a = test4()
+
