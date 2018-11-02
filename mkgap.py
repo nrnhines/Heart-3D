@@ -53,9 +53,9 @@ def gaps_for_gid(gid):
     gs.append(set_gap(gid, g2, 1.0, 1.0, 0))
 
   # between layers (assume icircle the same)
-  n = int(param.thickness/(nlayer - 1)/param.cell_diameter)
   for jlayer in [ilayer - 1, ilayer + 1]:
     if jlayer >= 0 and jlayer < nlayer:
+      n = int(param.thickness/(nlayer - 1)/param.cell_diameter)
       a = overlap(o, jlayer, icircle)
       for b in a:
         g2 = org2gid(jlayer, icircle, b[0])

@@ -19,7 +19,7 @@ def readcells(fname): #read and save positions (according to gid2rank distributi
     if gid2rank(gid) == rank:
       gidinfo[gid] = (float(a[1]), float(a[2]), float(a[3]))
   f.close()
-    
+  
 def readconnections(fname):
   global ncon
   f = open(fname)
@@ -33,8 +33,24 @@ def readconnections(fname):
   f.close()
 
 def cellconread():
-  readcells('../heart3d/morphology.txt')
-  readconnections('../heart3d/connections.txt')
+  #readcells('../heart3d/morphology.txt')
+  #readconnections('../heart3d/connections.txt')
+
+  # new Heart-3D paraboloid organization
+  global ncon, ncell
+  import cellorg, mkgap
+
+  ncell = cellorg.ngid
+  for gid in range(rank, ncell, nhost):
+    gidinfo[gid] = cellorg.xyz(*cellorg.gid2org(gid))
+
+  for gid in gidinfo:
+    mkgap.gaps_for_gid(gid)
+  ncon = 0 # unfortunately, no longer global number. Just for this rank
+  for g in mkgap.gaps:
+    if g not in connections:
+      connections[ncon] = g
+      ncon += 1
 
 if __name__ == '__main__':
   cellconread()
