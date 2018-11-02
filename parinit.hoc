@@ -1,0 +1,83 @@
+begintime = startsw()
+objref pc
+pc = new ParallelContext()
+
+{pc.timeout(20)}
+
+{load_file("nrngui.hoc")}
+{load_file("param.hoc")}
+
+//{load_file("net1.hoc")}
+//{load_file("bl3-mm.hoc")}
+
+{nrnpython("import net3d")}
+objref net3d
+{
+net3d = new PythonObject()
+net3d = net3d.net3d
+net3d.mkmodel()
+}
+
+//for dd=0, 3 {setgap(1, 2, dd, 8, 8, 1, 1000, 100, 0)}
+//for dd=0, 3 {setgap(1, 3, dd, 8, 8, 1, 1000, 100, 0)}
+
+{load_file("stim.hoc")}
+//{load_file("verifygap.hoc")}
+{load_file("parlib.hoc")}
+{load_file("spike2file.hoc")}
+want_all_spikes()
+
+//{cvode.use_long_double(1)}
+{cvode_active(1)}
+{cvode.atol(1e-5)}
+
+// utile per stampare sul file di terminale il procedere della simulazione
+objref fih_progress
+if (pc.id == 0) fih_progress = new FInitializeHandler(2, "cvode.event(10, \"progress()\")")
+progress_time_ = startsw()
+proc progress() {local pt
+	pt = progress_time_
+	progress_time_ = startsw()
+	print t, progress_time_ - pt
+	cvode.event(t + 10, "progress()")
+}
+
+//verifyHalfGap()
+
+setuptime = startsw() - begintime
+if (pc.id == 0) { printf("setuptime %g\n", startsw() - begintime) }
+
+vrecord(1)
+vrecord(5)
+vrecord(27000)
+
+{net3d.gj_record(100)}
+
+prun()
+
+{net3d.ecg.ecgout()}
+
+if (pc.id == 0) {
+	printf("spike2file_time %g\n", spike2file_time)
+	printf("trajec_out_time %g\n", trajec_out_time)
+	printf("trajec_out size %d\n", trajec_out_size)
+	printf("runtime %g\n", runtime)
+}
+
+// following two are now done at long intervals during prun in order
+// to not run out of memory and also to avoid losing all results if
+// failure after a long time.
+//spike2file() // old style in parlib.hoc, different prototype in spike2file.hoc
+//trajec_out("v")
+
+//verifyHalfGap()
+
+{pc.runworker()}
+{getstat()}
+{print_spike_stat_info()}
+
+if (pc.id == 0) { printf("totaltime %g\n", startsw() - begintime) }
+if (pc.nhost > 1) {
+  pc.done()
+  quit()
+}

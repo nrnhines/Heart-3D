@@ -1,0 +1,90 @@
+//execute1("celltypes.element(\"Cell\")")
+{load_file("stdlib.hoc")} // lambda_f
+
+begintemplate Cell
+public gaps, rand
+objref gaps[4]
+objref rand[4]
+
+public init, topol, basic_shape, subsets, geom, biophys, geom_nseg, biophys_inhomo
+public synlist, x, y, z, position, connect2target
+
+public soma
+public all
+
+objref synlist
+
+proc init() {
+  topol()
+  subsets()
+  geom()
+  biophys()
+  geom_nseg()
+  synlist = new List()
+  synapses()
+  x = y = z = 0 // only change via position
+}
+
+create soma
+
+proc topol() { local i
+  basic_shape()
+}
+proc basic_shape() {
+  soma {pt3dclear() pt3dadd(0, 0, 0, 1) pt3dadd(15, 0, 0, 1)}
+}
+
+objref all
+proc subsets() { local i
+  objref all
+  all = new SectionList()
+    soma all.append()
+
+}
+proc geom() {
+  soma {  L = 100  diam = 16  }
+}
+external lambda_f
+proc geom_nseg() {
+}
+proc biophys() {
+  soma {
+    cm = 1
+    insert Cadynam
+    insert IK1
+      gK1_IK1 = 0.00035
+    insert INa
+      gnabar_INa = 0.006
+      gnac_INa = 3e-06
+      Tauact_INa = 1
+      Tauinactf_INa = 1
+      Tauinacts_INa = 1
+    insert IKx1
+      gx1_IKx1 = 0.0008
+      Tauact_IKx1 = 1
+    insert K_acc
+      Vi_K_acc = 1.3668e-08
+      ik_K_acc = 0.00044512
+      Kneutral_K_acc = 3e-05
+    insert Na_acc
+      Naneutral_Na_acc = 3e-05
+      Vi_Na_acc = 1.3668e-08
+    insert Is
+      gsbar_Is = 5e-05
+  }
+}
+proc biophys_inhomo(){}
+proc position() { local i
+  soma for i = 0, n3d()-1 {
+    pt3dchange(i, $1-x+x3d(i), $2-y+y3d(i), $3-z+z3d(i), diam3d(i))
+  }
+  x = $1  y = $2  z = $3
+}
+obfunc connect2target() { localobj nc //$o1 target point process, optional $o2 returned NetCon
+  soma nc = new NetCon(&v(1), $o1)
+  nc.threshold = 0
+  if (numarg() == 2) { $o2 = nc } // for backward compatibility
+  return nc
+}
+proc synapses() {}
+endtemplate Cell

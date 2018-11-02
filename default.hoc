@@ -1,0 +1,13 @@
+{load_file("stdlib.hoc")}
+proc default_var() {localobj s
+	s = new String()
+	if (name_declared($s1) < 2) {
+		hoc_ac_ = $2
+		sprint(s.s, "%s = hoc_ac_", $s1)
+		execute(s.s)
+	}	
+	sprint(s.s, "hoc_ac_ = %s", $s1)
+	execute(s.s)
+	if (pc.id == 0) printf("%s = %g\n", $s1, hoc_ac_)
+}
+

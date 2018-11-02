@@ -1,0 +1,65 @@
+{load_file("default.hoc")}
+
+// network size parameters
+default_var("Nx", 128) // number of cells in x-dimension
+default_var("Ny", 256) // number of cells in y-dimension
+
+// boundary conditions - 0 means cut, 1 means wrap, (2 means mirror?)
+default_var("xwrap", 0)
+default_var("ywrap", 0)
+
+// gap connection parameter
+default_var("ggap", 30) // nanosiemens
+default_var("gsd", 0) // variance, nanosiemens
+default_var("drift", 0) // drift
+
+// gap connection parameter within the ischemic region
+default_var("gblk", 7.5) // nanosiemens
+default_var("gblk_var", 1) // variance nanosiemens
+default_var("gblk_drift", 0) // drift nanosiemens
+default_var("gblk_tc", 1000) // milliseconds
+default_var("gblk_tc_var", 200) // variance milliseconds
+
+
+// ionic concentrations
+default_var("ca_in", 1e-7) // used to set cai0_ca_ion (mM)
+default_var("ca_out", 1.8) // used to set cao0_ca_ion (mM)
+default_var("na_in", 20) // used to set nai0_na_ion (mM)
+default_var("na_out", 140) // used to set nao0_na_ion (mM)
+default_var("k_in", 141.59) // used to set ki0_k_ion (mM)
+default_var("k_out", 5.4) // used to set ko0_k_ion (mM)
+
+// stimulation parameters for NIClamp
+default_var("msrow", 2) // beginning row for line of ms stim
+default_var("mscol", 3) // beginning col for line of ms stim
+default_var("nms", 4) // number of adjacent identical ms stim (in mscol)
+default_var("msdel", 100) // (ms)
+default_var("msdur", 1) // (ms)
+default_var("msamp", 0) // (nA)
+default_var("msdel1", 900) // (ms)
+default_var("msn", 3) // (1)
+default_var("ms2row", 2) // like msrow
+default_var("ms2col", 2) // like mscol
+default_var("ms2del", 100) // (ms)
+default_var("ms2dur",5) // (msec)
+default_var("ms2amp", 4) // (nA)
+default_var("ms2del1", 800) // (msec)
+default_var("ms2n", 200) // (1)
+
+// simulation parameters
+default_var("stoptime", 400) // used to set tstop (ms)
+default_var("checkpoint_interval", 10000) //interval for spike and trajec output
+default_var("temperature", 37) // used to set celsius (degC)
+default_var("vinit", -75) // used to set v_init (mV)
+
+
+tstop = stoptime
+celsius = temperature
+v_init = vinit
+cai0_ca_ion = ca_in
+cao0_ca_ion = ca_out
+nai0_na_ion = na_in
+nao0_na_ion = na_out
+ki0_k_ion = k_in
+ko0_k_ion = k_out
+

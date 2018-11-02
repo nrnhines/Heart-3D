@@ -1,0 +1,30 @@
+objref pc
+pc = new ParallelContext()
+{load_file("nrngui.hoc")}
+{load_file("param.hoc")}
+
+cvode.active(1)
+
+//{load_file("net1.hoc")}
+//{load_file("bl2-gvar.hoc")}
+
+{nrnpython("import net3d")}
+objref net3d
+{
+net3d = new PythonObject()
+net3d = net3d.net3d
+net3d.mkmodel()
+}
+
+{load_file("stim.hoc")}
+{load_file("parlib.hoc")}
+want_all_spikes()
+
+if (pc.nhost > 1) {
+  pc.barrier()
+  quit()
+}
+
+//load_file("prova.ses")
+
+

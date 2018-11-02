@@ -1,0 +1,47 @@
+objref ms[nms], ms2, mslist
+
+// onto gid = $1
+obfunc mkstim() {local gid  localobj c, s, nil
+	gid = $1
+	if (gid < 0) { return nil }
+	if (!pc.gid_exists(gid)) { return nil }
+	c = pc.gid2cell(gid)
+
+	c.soma { s = new NIClamp(.5) }
+	s.del = msdel
+	s.dur = msdur
+	s.amp = msamp
+	s.del1 = msdel1
+	s.n = msn
+	return s
+}
+
+proc ms2fill() { localobj ms2
+  ms2 = $o1
+if (object_id(ms2) != 0) {
+	ms2.del = ms2del
+	ms2.amp = ms2amp
+	ms2.dur = ms2dur
+	ms2.del1 = ms2del1
+	ms2.n = ms2n
+}
+}
+
+//ms2 = mkstim(1)
+ms2fill(ms2)
+
+proc purkstim() {local gid  localobj f, s
+  mslist = new List()
+  f = new File("../heart3d/Purkinje_Cells.txt")
+  f.ropen()
+  while (!f.eof()) {
+    gid = f.scanvar()
+    if (pc.gid_exists(gid)) {
+      //printf("%d purkstim %d\n", pc.id, gid)
+      s = mkstim(gid)
+      mslist.append(s)
+      ms2fill(s)
+    }
+  }
+}
+purkstim()

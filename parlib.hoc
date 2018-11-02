@@ -1,0 +1,177 @@
+{load_file("netparmpi.hoc")}
+objref pnm
+pnm = new ParallelNetManager(0)
+
+proc want_all_spikes() {local gid, i
+	pc.spike_record(-1, pnm.spikevec, pnm.idvec)
+}
+
+proc spike2file() { localobj outf, s
+	s = new String()
+	sprint(s.s, "out%d.dat", pc.nhost)
+        outf = new File()
+        if (pc.id == 0) {outf.wopen(s.s) outf.close } // start new file
+	for pnm.serialize() {
+		outf.aopen(s.s)
+	        for i=0, pnm.idvec.size-1 {
+        	        outf.printf("%g %d\n", pnm.spikevec.x[i], pnm.idvec.x[i])
+	        }
+	        outf.close
+	}
+}
+
+objref tdat_   
+tdat_ = new Vector(6)
+proc prun() {local tnext
+	pc.setup_transfer()
+        pc.set_maxstep(200)
+        runtime=startsw()
+        tdat_.x[0] = pc.wait_time
+        stdinit()
+	while(t < tstop) {
+		tnext = t + checkpoint_interval
+		if (tnext > tstop) {
+			tnext = tstop
+		}
+		if (pc.id == 0) printf("tnext = %g\n", tnext)
+	        pc.psolve(tnext)
+		spike2file(pnm.spikevec, pnm.idvec)
+		trajec_out("v")
+		net3d.gj_out("gj")
+	}
+        tdat_.x[0] = pc.wait_time - tdat_.x[0]
+        runtime = startsw() - runtime
+        tdat_.x[1] = pc.step_time
+        tdat_.x[2] = pc.send_time
+	tdat_.x[3] = pc.vtransfer_time(0) // for gaps
+	tdat_.x[4] = pc.vtransfer_time(1) // for splitcells
+//      printf("%d wtime %g\n", pnm.myid, waittime)
+}
+
+mindelay_ = 1e9
+func mindelay() {local i, md
+	if (pc.nhost > 1) {
+		pc.context("{pc.post(\"mindelay\", mindelay_)}")
+		for i=1, pc.nhost-1 {
+			pc.take("mindelay", &md)
+			if (md < mindelay_) {
+				mindelay_ = md
+			}
+		}		
+	}
+	return mindelay_ // see nc_append
+}
+
+objref tavg_stat, tmin_stat, tmax_stat, idmin_stat, idmax_stat
+proc poststat() {
+	pnm.pc.post("poststat", pnm.myid, tdat_)
+}
+proc getstat() {local i, j, id localobj tdat
+	tdat = tdat_.c	tavg_stat = tdat_.c  tmin_stat = tdat_.c  tmax_stat = tdat_.c
+	idmin_stat = tdat_.c.fill(0)  idmax_stat = tdat_.c.fill(0)
+	if (pnm.nwork > 1) {
+		pnm.pc.context("poststat()\n")
+		for i=0, pnm.nwork-2 {
+			pnm.pc.take("poststat", &id, tdat)
+			tavg_stat.add(tdat)
+			for j = 0, tdat_.size-1 {
+				if (tdat.x[j] > tmax_stat.x[j]) {
+					idmax_stat.x[j] = id
+					tmax_stat.x[j] = tdat.x[j]
+				}
+				if (tdat.x[j] < tmin_stat.x[j]) {
+					idmin_stat.x[j] = id
+					tmin_stat.x[j] = tdat.x[j]
+				}
+			}
+		}
+	}
+	tavg_stat.div(pnm.nhost)
+}
+
+proc print_spike_stat_info() {local i, j, id  localobj spstat, sum, min, max, idmin, idmax, label
+	printf("\n%-10s %-10s %-10s %-10s %-10s %-10s %-10s %-10s\n",\
+		"setup", "run", "avgspkxfr", "avgcomp", "avgx2q", "avgvxfr", "avgsplit", "avgcmplx")
+	printf("%-10.4g %-10.4g", setuptime, runtime)
+	for i=0, tdat_.size-1 { printf(" %-10.4g", tavg_stat.x[i]) }
+
+	printf("\n\n%5s %-15s %-15s %-15s %-15s %-15s %-15s\n", \
+		"", "id   spkxfr", "id   com", "id   x2q", "id   vxfr", "id   split", "id   cmplx")
+	printf("%-5s", "min")
+	for i=0, tdat_.size-1 { printf(" %-4d %-10.4g", idmin_stat.x[i], tmin_stat.x[i]) }
+	printf("\n%-5s", "max")
+	for i=0, tdat_.size-1 { printf(" %-4d %-10.4g", idmax_stat.x[i], tmax_stat.x[i]) }
+	printf("\n")
+}
+
+proc perf2file() { local i  localobj perf
+	perf = new File()
+	perf.aopen("perf.dat")
+	perf.printf("%d %d %d %d    %g %g     ",pnm.nhost, pnm.ncell, load_balance_phase, use_gap, setuptime, runtime)
+	for i=0, tdat_.size-1 { perf.printf(" %g", tavg_stat.x[i]) }
+	perf.printf("     ")
+	for i=0, tdat_.size-1 { perf.printf(" %d %g ", idmin_stat.x[i], tmin_stat.x[i]) }
+	perf.printf("     ")
+	for i=0, tdat_.size-1 { perf.printf(" %d %g ", idmax_stat.x[i], tmax_stat.x[i]) }
+	perf.printf("\n")
+
+	perf.close
+}
+
+//voltage for cell x, y
+objref trajec_list, trajec_id
+trajec_id = new Vector()
+trajec_list = new List()
+proc vrecord() { local gid  localobj cell, vec
+	gid =  $1
+	if (!pc.gid_exists(gid)) return
+printf("%d vrecord %d gid=%d\n", pc.id, $1, gid)
+	cell = pc.gid2cell(gid)
+	if (trajec_list.count == 0) {
+		vec = new Vector()
+		cell.soma vec.record(&t)
+		trajec_list.append(vec)
+	}
+	vec = new Vector()
+	trajec_id.append(gid)
+	cell.soma vec.record(&v(.5))
+	trajec_list.append(vec)
+}
+// arg is prefix name of output file, actual name will be
+// $s1_ix_iy.dat
+trajec_out_time = 0
+trajec_out_ncall = 0
+trajec_out_size = 0
+proc trajec_out() {local i, j, ix, iy, gid, ts localobj f, fname, tvec, vvec
+	if (trajec_list.count == 0) return
+	ts = startsw()
+	fname = new String()
+	tvec = trajec_list.o(0)
+	trajec_out_size += tvec.size
+	for i=0, trajec_id.size-1 {
+		gid = trajec_id.x[i]
+//		ix = gid2ix(gid)
+//		iy = gid2iy(gid)
+		printf("%d trajec_out gid=%d\n", pc.id, gid)
+		sprint(fname.s, "%s_%04d.dat", $s1, gid)
+		f = new File()
+		vvec = trajec_list.o(i+1)
+		if (trajec_out_ncall == 0) {
+			f.wopen(fname.s)
+			f.printf("%d\n", tvec.size)
+		}else{
+			f.aopen(fname.s)
+		}
+		for j=0, tvec.size-1 {
+			f.printf("%g %g\n", tvec.x[j], vvec.x[j])
+		}
+		f.close
+	}
+	for i=0, trajec_list.count - 1 {
+		trajec_list.o(i).resize(0)
+	}
+	trajec_out_ncall += 1
+	ts = startsw() - ts
+	if (pc.id == 0) { printf("trajec_out call %d at t=%g , time(sec) %g\n", trajec_out_ncall, t, ts) }
+	trajec_out_time += ts
+}
