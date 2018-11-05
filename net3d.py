@@ -3,6 +3,7 @@ from cellconread import cellconread, gidinfo, connections, ncell, ncon
 import snapsh
 import ecg
 from gjrecord import gj_record, gj_out
+import mkgap
 
 cellconread()
 
@@ -25,6 +26,7 @@ def mkgaps(gidinfo, connections):
   mark = set()
   for cid in connections:
     gid1, gid2 = connections[cid]
+    g = mkgap.get_gap(gid1, gid2)
     mkhalfgap(gid1, gid2, 1, cid, gidinfo, mark)
     mkhalfgap(gid2, gid1, -1, cid, gidinfo, mark)
   pc.setup_transfer()
