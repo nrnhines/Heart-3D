@@ -1,0 +1,51 @@
+The inner layer is a paraboloid. Other layers are defined as
+constant distance surfaces in the direction of the gradient of the
+inner layer. Those layers are not themselves exactly paraboloids.
+(go ahead, try to make a paraboloid equation for them).
+
+We began with an orthogonal system (ilayer, icircle, ipt). However, that
+has the property that the distance between circles in outer layers are
+longer than the distance between circles in the inner layer. We took into
+account that circles of different diameter have different numbers of cells
+laid end to end (and a slight difference in length since an integer
+number of cells comprise the circle with all cells as close to 100um in
+length as possible). And we have a function that calculates the overlap
+between a cell on a circle and the cells on another circle.
+We have been relying on the fact that corresponding circles in adjacent
+layers have the same icircle. This is problematic since if the
+inner layer has a distance between circles of dc, then the outer layer
+(thickness of heart is 0.5cm) near the tip has a distance of about 3dc.
+Thus it might be useful for different layers to have different numbers of
+circles. This complicates the overlap since not only lengths overlap
+but in the depth dimension the sides of cells overlap as well. And too
+bad about the loss of icircle correspondence. Note that ipt correspondence
+between circles was easy to calculate because of ipt angle correspondence.
+
+Alternatively, we can keep the orthogonal property for icircle of different
+layers and think in terms of regions instead of cells. This fits with
+a coarse discretization in which layer distances are hundreds of microns
+and inner circle distances are hundreds of microns. In this case,
+the region is just longer on the outside than the inside and longer
+on the base side than the tip side. That has the advantage of regions
+shareing faces (with overlap only in the ipt dimension)
+so that flux is easy to conserve. The conflation of cell and region
+in the different dimensions is causing confusion. We would use
+cells exclusively if there were not so many of them. Presently the ipt
+dimension is cell based and not region based, but the layer and circle
+dimensions are region based.
+
+Of course, if we think of cells as bricks (all about the same size) and
+regions as bricks as well (all about the same size) then there is a
+uniform conceptualization that is scalable (discretization) in each
+dimension. i.e cell 100x30x30 generates 231,027,900 cells
+and region 200x200x200 generates 2,620,194 regions. For convenience
+of calculating circle adjacency in adjacent layers, just need a function
+instead of icircle index.  For effective gap area between two cells or
+regions. Just calculate the length of the overlap of their faces using
+the circle between the two cell or region points.  Presently, a cell
+or region point is the middle of the proximal end face. Note that adjacent
+cells in the same circle share the proximal face of one with the distal
+face of the other. In the icircle dimension in the same layer, adjacent
+cells overlap in the ipt dimension but not in the layer dimension.
+In the ilayer dimension the overlap is multiple circles in the adjacent
+layer as well as multiple ipt in the adjacent layer.
