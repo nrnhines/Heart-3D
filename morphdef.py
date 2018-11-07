@@ -41,7 +41,7 @@ def add_(pt, d):
   return tuple([a + b*d for a, b in zip(pt, v)])
 
 def const_sep_layer_origins(i_layer, sep, p0, zend):
-  d = p.thickness*i_layer/(p.n_layer - 1)
+  d = p.layer_thickness*i_layer
   o = []
   pt = addmul(p0, d, normgrad(p0))
   pt0 = p0
@@ -92,7 +92,7 @@ def next_const_sep_layer_origin(pt, pt0, d, sep):
     
 def outer_layer_origins(i_layer, origins):
   o = []
-  d = i_layer * p.thickness/(p.n_layer - 1)
+  d = i_layer * p.layer_thickness
   for pt in origins:
     g = (2.*p.abc[0]*pt[0], 0.0, -p.abc[2])
     norm = distance(g, (0., 0., 0.))
@@ -103,13 +103,13 @@ def outer_layer_origins(i_layer, origins):
 
 def test1():
   # Each layer has same number of circles
-  origins = circle_origins(p.internal_surface_circle_distance, p.hole_radius, p.nominal_height)
+  origins = circle_origins(p.layer_surface_circle_distance, p.hole_radius, p.nominal_height)
   nsec = 0
   o4 = outer_layer_origins(4, origins)
   for p0, p4 in zip(origins, o4):
      c = 2.*pi*p0[0]
      c4 = 2.*pi*p4[0]
-     n = int(c/p.nominal_cell_length)
+     n = int(c/p.nominal_region_length)
      print ("%d sections of length %g (layer 4 length %g)" %(n, c/n, c4/n))
      nsec += n
   print ("%d circles in one layer with total %d sections"%(len(origins), nsec))
@@ -117,13 +117,13 @@ def test1():
 
 def test2():
   # Circles in each layer have constant separation
-  origins = circle_origins(p.internal_surface_circle_distance, p.hole_radius, p.nominal_height)
-  o4 = const_sep_layer_origins(4, p.internal_surface_circle_distance, origins[0], p.nominal_height)
+  origins = circle_origins(p.layer_surface_circle_distance, p.hole_radius, p.nominal_height)
+  o4 = const_sep_layer_origins(4, p.layer_surface_circle_distance, origins[0], p.nominal_height)
   for o in [origins, o4]:
     nsec = 0
     for p0 in o:
       c = 2.*pi*p0[0]
-      n = int(c/p.nominal_cell_length)
+      n = int(c/p.nominal_region_length)
       nsec += n
     print ("%d circles in layer with total %d sections"%(len(o), nsec))
   

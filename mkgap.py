@@ -52,10 +52,12 @@ def gaps_for_gid(gid):
     g2 = org2gid(ilayer, icircle, jpt)
     gs.append(set_gap(gid, g2, 1.0, 1.0, 0))
 
-  # between layers (assume icircle the same)
+  # between layers
   for jlayer in [ilayer - 1, ilayer + 1]:
     if jlayer >= 0 and jlayer < nlayer:
-      n = int(param.thickness/(nlayer - 1)/param.cell_diameter)
+      # usually 2, possibly 3, circles in jlayer overlap icircle
+      # n = int(param.layer_thickness/param.cell_diameter)
+      n = 1
       a = overlap(o, jlayer, icircle)
       for b in a:
         g2 = org2gid(jlayer, icircle, b[0])

@@ -49,3 +49,29 @@ face of the other. In the icircle dimension in the same layer, adjacent
 cells overlap in the ipt dimension but not in the layer dimension.
 In the ilayer dimension the overlap is multiple circles in the adjacent
 layer as well as multiple ipt in the adjacent layer.
+
+From one geomtrical space filling point of view the long edges of a
+cell/region brick are circle curves with centers on the z-axis.
+Will anyone be upset if we approximate the parabolic dimension
+as piecewise linear with derivative continuity breaks at the corners.
+The downside is that when cells in different layers overlappingly butte
+up against each other, their connecting faces are not exactly parallel.
+Suppose the morphology point (1) of each brick is defined as the interior,
+least z coordinate corner. The other three corners of the end face are defined
+as the normal vector (2) to the next layer and the normal vector (3)
+to the next circle. Corner (4) is the normal vector from (3) to the next layer.
+Note that a corner (2) of a layer 1 cell does not directly
+match up with a corner (1) of a layer 2 cell. And as one goes around a circle,
+corner (1) does not directly match up with any adjacent circle corner (1).
+It is not much simplicity benefit on the circles to approximate them
+as piecewise linear (since the exact math is simple) so we switch to
+exact calculation of area using the four circle segments that define
+the cell --- and treat a pair of circle segments as forming a portion
+of a frustrum.
+
+Given 4 circle arcs that define cell0, the question of connecivity
+hinges on what other cells have circle arcs that at least partially
+lie on the faces of cell0. And what fractions of the cell0 faces
+are overlapped by those cells. Generally, except on the inner and
+outer surfaces and the tip and base, the sum of those fractions is
+the entire surface of cell0.

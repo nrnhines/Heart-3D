@@ -1,29 +1,38 @@
 
 # Internal Paraboloid surface is a*x**2 + b*y**2 - c*z = 0
 # with 1/a = 15000**2, 1/b=15000^2, and 1/c=50000 (numbers are microns)
-# The thickness is 0.5cm 
-# There are 5 layers moving outward separated by 5000/4 um.
-# Layers are normal to the surface along the gradient:
+# The total thickness from inner to outer surface is "nominal_thickness"
+# There are n_layer and the distance between layers is layer_thickness.
+# Layers are normal to the surface along the gradient relative to the
+# inner surface (only the inner surface is a true paraboloid):
 # (2*a*x, 2*b*y, -c)
-# Cells are nominally L=100 and diam=30 and are arranged end to end
-# around circles of constant z. The number of cells on an interior
-# circle is the greatest integer such that L >=100. All layer circles
-# associated with the same z, have the same number of cells (length
-# becomes slightly larger as layer index increases).
-# Circles on the internal surface are
-# separated by 300 um normal to the gradient. The inside layer circle closest
-# to the tip has radius of 500 um.
+# Regions (or abstract cells) are space filling and defined
+# by the location of the corner with the least z, least layer, least angle.
+# I.e. not the center of the region.
+# They are laid out end to end around circles of constant z within a layer.
+# The number of regions around a circle is an integer and so the length
+# of each region is as close to "nominal_region_length" as possible.
+# Note that circles with greater z and farther from the inner surface have
+# longer circumferences and generally, therefore, have more regions.
+# Circles within a layer are separated by "layer_surface_circle_distance
+# The inside layer circle closest to the tip has radius of 500 um.
 
-# Connections between layers and along a circle are obvious.
+# Connections along a circle are obvious. Regions of adjacent circles within
+# a layer overlap in the lenght direction. Regions of adjacent layers
+# overlap in both the length and adjacent circle dimension.
 
+# Overall macroscopic shape
 nominal_height = 50000.
 nominal_base_radius = 15000.
-thickness = 5000.
+nominal_thickness = 5000.
 hole_radius = 500.
-internal_surface_circle_distance = 300.
-n_layer = 5
-nominal_cell_length = 100.
-cell_diameter = 30.
+
+# Region discretization
+layer_surface_circle_distance = 200.
+layer_thickness = 200.
+nominal_region_length = 200.
+
+n_layer = int(nominal_thickness/layer_thickness)
 
 abc = (1/nominal_base_radius**2, 1/nominal_base_radius**2, 1/nominal_height)
 

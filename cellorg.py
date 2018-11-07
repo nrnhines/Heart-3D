@@ -9,7 +9,7 @@ from math import pi, cos, sin, tan
 # return number of points on circle
 def circle0_n(pt):
   c = 2.*pi*pt[0]
-  n = int(c/p.nominal_cell_length)
+  n = int(c/p.nominal_region_length)
   return n
 
 # return n points around circle
@@ -19,11 +19,11 @@ def circle_discrete(n, pt):
   pts = []
   for i in range(n):
     a = 2.*pi*i/n
-    pts.append((r*sin(a), r*cos(a), z))
+    pts.append((r*cos(a), r*sin(a), z))
   return pts
 
 def morphorg():
-  sep = p.internal_surface_circle_distance
+  sep = p.layer_surface_circle_distance
   rstart = p.hole_radius
   zend = p.nominal_height
   paraboloid = [circle_origins(sep, rstart, zend)]
@@ -41,7 +41,7 @@ def pt2circle(ilayer, pt):
   # Note that an icircle domain is from -sep/2 to +sep/2.
   assert(pt[1] == 0.0) # assume x, z on the layer surface.
   circles = paraboloid[ilayer]
-  sep2 = p.internal_surface_circle_distance * .5
+  sep2 = p.layer_surface_circle_distance * .5
   # kind of a discrete newton method
   # the dz between circles is an increasing function of z so start at end
   i = len(circles) - 1
@@ -122,7 +122,7 @@ def xyz(ilayer, icircle, ipt): # note that ipt refers to the proximal point on t
   pt = paraboloid[ilayer][icircle]
   a = 2*pi*ipt/n
   r = pt[0]
-  return r*sin(a), r*cos(a), pt[2]
+  return r*cos(a), r*sin(a), pt[2]
 
 def xyz_center(ilayer, icircle, ipt):
  x1, y1, z1 = xyz(ilayer, icircle, ipt)
