@@ -12,7 +12,6 @@
 from math import cos, sin
 from cellorg import ipt2angle, paraboloid
 from morphdef import normgrad, addmul
-from neuron import h
 import param
 
 
@@ -53,6 +52,21 @@ def test1(ilayer, icircle, ipt):
   c = cellcorners(ilayer, icircle, ipt)
   print (c)
 
+def test2(): # x, z slice through ipt = 0
+  from neuron import h, gui
+  g = h.Graph(0)
+  g.view(2)
+  for ilayer in range(nlayer-1):
+    for icircle in range(ncircle[ilayer]-1):
+      c = cellcorners(ilayer, icircle, 0)
+      g.beginline(ilayer+1, 1)
+      g.line(c.p000[0], c.p000[2])
+      g.line(c.p010[0], c.p010[2])
+      g.line(c.p110[0], c.p110[2])
+      g.line(c.p100[0], c.p100[2])
+      g.line(c.p000[0], c.p000[2])
+      g.flush()
+  return g
 if __name__ == "__main__":
   from p100from import maxiter
   test1(0, 0, 0)
@@ -64,3 +78,4 @@ if __name__ == "__main__":
     for icircle in range(ncircle[ilayer]-1):
       cellcorners(ilayer, icircle, 10)
   print ("maxiter = ", maxiter)
+  test2()
