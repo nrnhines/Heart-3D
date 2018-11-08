@@ -56,8 +56,8 @@ def test2(): # x, z slice through ipt = 0
   from neuron import h, gui
   g = h.Graph(0)
   g.view(2)
-  for ilayer in range(nlayer-1):
-    for icircle in range(ncircle[ilayer]-1):
+  for ilayer in range(nlayer):
+    for icircle in range(ncircle[ilayer] - 1):
       c = cellcorners(ilayer, icircle, 0)
       g.beginline(ilayer+1, 1)
       g.line(c.p000[0], c.p000[2])
@@ -72,7 +72,17 @@ if __name__ == "__main__":
   test1(0, 0, 0)
   test1(0, 1, 0)
   test1(1, 0, 0)
-  from cellorg import nlayer, ncircle
+
+  from cellorg import nlayer, ncircle, distance
+  c = cellcorners(0, 0, 0)
+  c1 = cellcorners(nlayer - 1, 0, 0)
+  print ("thickness near tip ", distance(c.p000, c1.p100))
+  c = cellcorners(0, ncircle[0]-2, 0)
+  n = ncircle[nlayer-1]
+  for ic1 in range(n - 10, n - 2):
+    c1 = cellcorners(nlayer-1, ic1, 0)
+    print ("thickness near base ", ic1, distance(c.p000, c1.p100))
+
   ilayer = nlayer-2
   for ilayer in range(nlayer-1):
     for icircle in range(ncircle[ilayer]-1):
