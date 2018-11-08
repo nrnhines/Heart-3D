@@ -1,10 +1,15 @@
 import param as p
-from morphdef import circle_origins, outer_layer_origins
+from morphdef import circle_origins
 from morphdef import distance, const_sep_layer_origins, addmul, normgrad
+from p100from import p100from
 from math import pi, cos, sin, tan
+
 
 # structure that allows fast calculation of cell position and neighbors
 # paraboloid contains layers contains circle origins
+# The origin is a pair of (r, z) tuples specifying the p000 and p100
+# corners of the cell/region. These corners are shared by the cell/region
+# (ilayer, icircle-1, 0) corners p010 and p110
 
 # return number of points on circle
 def circle0_n(pt):
@@ -23,14 +28,19 @@ def circle_discrete(n, pt):
   return pts
 
 def morphorg():
-  sep = p.layer_surface_circle_distance
+  csep = p.layer_surface_circle_distance
+  dsep = p.layer_thickness
   rstart = p.hole_radius
   zend = p.nominal_height
-  paraboloid = [circle_origins(sep, rstart, zend)]
+  # start with p000 corners
+  paraboloid = [circle_origins(csep, rstart, zend)]
   for i in range(1, p.n_layer):
-    #paraboloid.append(outer_layer_origins(i, paraboloid[0]))
-    paraboloid.append(const_sep_layer_origins(i, sep, paraboloid[0][0], zend))
-  npts = [[circle0_n(pt) for pt in paraboloid[i]] for i in range(p.n_layer)]
+    paraboloid.append(const_sep_layer_origins(i, csep, paraboloid[0][0], zend))
+  # replace p000 corners with (p000, p100) corner pairs.
+  for i in range(p.n_layer):
+    for j, p000 in enumerate(paraboloid[i]):
+      paraboloid[i][j] = (p000, p100from(p000, dsep))
+  npts = [[circle0_n(o[0]) for o in paraboloid[i]] for i in range(p.n_layer)]
   return paraboloid, npts
 
 pt2circle_maxiter = 0
@@ -45,17 +55,17 @@ def pt2circle(ilayer, pt):
   # kind of a discrete newton method
   # the dz between circles is an increasing function of z so start at end
   i = len(circles) - 1
-  z = circles[i][2]
+  z = circles[i][0][2]
   if pt[2] >= z:
     assert(pt[2] <= z + sep2)
     return i
   maxiter = 0
   while i > 0 and pt[2] < z:
-    dz = z - circles[i-1][2]
+    dz = z - circles[i-1][0][2]
     j = int((pt[2] - z)/dz)
     i += j if j else -1
-    z = circles[i][2]
-    assert(pt[2] < circles[i+1][2])
+    z = circles[i][0][2]
+    assert(pt[2] < circles[i+1][0][2])
     maxiter += 1
     assert (maxiter < 20)
   if maxiter > pt2circle_maxiter:
@@ -63,8 +73,8 @@ def pt2circle(ilayer, pt):
   if i == 0 and pt[2] < z :
     assert(pt[2] >= z - sep2)
     return i
-  d1 = distance(pt, circles[i])
-  d2 = distance(pt, circles[i+1])
+  d1 = distance(pt, circles[i][0])
+  d2 = distance(pt, circles[i+1][0])
   if (d1 > d2):
     i += 1
   return i
@@ -119,7 +129,7 @@ def gid2org_help_circle(ilayer, r): # return last i where circle_offset[i] <= r
 def xyz(ilayer, icircle, ipt): # note that ipt refers to the proximal point on the section
   n = npts[ilayer][icircle]
   ipt = ipt%n # wrap around
-  pt = paraboloid[ilayer][icircle]
+  pt = paraboloid[ilayer][icircle][0]
   a = 2*pi*ipt/n
   r = pt[0]
   return r*cos(a), r*sin(a), pt[2]
@@ -298,23 +308,24 @@ def test5(): #pt2circle
   o0 = paraboloid[0]
   n = 4
   o1 = paraboloid[n]
-  d = distance(o1[0], o0[0])
+  d = distance(o1[0][0], o0[0][0])
   g = h.Graph()
   for p in o1:
-    g.mark(p[0], p[2], "|", 10, 1, 1)
-  for p in o0:
+    g.mark(p[0][0], p[0][2], "|", 10, 1, 1)
+  for o in o0:
+    p = o[0]
     p1 = addmul(p, d, normgrad(p))
     i = pt2circle(n, p1)
     g.mark(p1[0], p1[2], "|", 10, 2, 1)
-    g.mark(o1[i][0], o1[i][2], "|", 10, 3, 1)
-    d1 = distance(p1, o1[i])
-    if i > 0 and p1[2] < o1[i][2]:
-      d2 = distance(p1, o1[i-1])
-      print(i, " < ", distance(p1, o1[i]), distance(p1, o1[i-1]))
+    g.mark(o1[i][0][0], o1[i][0][2], "|", 10, 3, 1)
+    d1 = distance(p1, o1[i][0])
+    if i > 0 and p1[2] < o1[i][0][2]:
+      d2 = distance(p1, o1[i-1][0])
+      print(i, " < ", distance(p1, o1[i][0]), distance(p1, o1[i-1][0]))
       assert (d1 <= d2)
-    if i < len(o1)-1 and p1[2] > o1[i][2]:
-      d2 = distance(p1, o1[i+1])
-      print(i, " > ", distance(p1, o1[i]), distance(p1, o1[i+1]))
+    if i < len(o1)-1 and p1[2] > o1[i][0][2]:
+      d2 = distance(p1, o1[i+1][0])
+      print(i, " > ", distance(p1, o1[i][0]), distance(p1, o1[i+1][0]))
       assert (d1 <= d2)
 
 if __name__ == "__main__":
