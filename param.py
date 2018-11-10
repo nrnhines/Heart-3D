@@ -28,9 +28,9 @@ nominal_thickness = 5000.
 hole_radius = 500.
 
 # Region discretization
-layer_surface_circle_distance = 200.
-layer_thickness = 200.
-nominal_region_length = 200.
+layer_surface_circle_distance = 500.
+layer_thickness = 500.
+nominal_region_length = 500.
 
 n_layer = int(nominal_thickness/layer_thickness)
 
