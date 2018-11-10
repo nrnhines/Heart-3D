@@ -327,6 +327,7 @@ def test5(): #pt2circle
       d2 = distance(p1, o1[i+1][0])
       print(i, " > ", distance(p1, o1[i][0]), distance(p1, o1[i+1][0]))
       assert (d1 <= d2)
+  return g
 
 if __name__ == "__main__":
  

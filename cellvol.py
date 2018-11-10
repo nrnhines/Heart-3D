@@ -67,6 +67,7 @@ def test2(): # x, z slice through ipt = 0
       g.line(c.p000[0], c.p000[2])
       g.flush()
   return g
+
 if __name__ == "__main__":
   from p100from import maxiter
   test1(0, 0, 0)
@@ -88,4 +89,4 @@ if __name__ == "__main__":
     for icircle in range(ncircle[ilayer]-1):
       cellcorners(ilayer, icircle, 10)
   print ("maxiter = ", maxiter)
-  test2()
+  g = test2()
