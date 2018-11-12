@@ -2,6 +2,10 @@ The inner layer is a paraboloid. Other layers are defined as
 constant distance surfaces in the direction of the gradient of the
 inner layer. Those layers are not themselves exactly paraboloids.
 (go ahead, try to make a paraboloid equation for them).
+We refer to the parabola (z), circumferential (angle), and depth
+dimensions. The depth dimension is indexed as ilayer, the parabola
+dimension is indexed as icircle, and the circumferential dimension
+is indexed as ipt.
 
 We began with an orthogonal system (ilayer, icircle, ipt). However, that
 has the property that the distance between circles in outer layers are
@@ -24,7 +28,7 @@ between circles was easy to calculate because of ipt angle correspondence.
 Alternatively, we can keep the orthogonal property for icircle of different
 layers and think in terms of regions instead of cells. This fits with
 a coarse discretization in which layer distances are hundreds of microns
-and inner circle distances are hundreds of microns. In this case,
+and adjacent circle distances in a layer are hundreds of microns. In this case,
 the region is just longer on the outside than the inside and longer
 on the base side than the tip side. That has the advantage of regions
 shareing faces (with overlap only in the ipt dimension)
@@ -67,7 +71,11 @@ It is not much simplicity benefit on the circles to approximate them
 as piecewise linear (since the exact math is simple) so we switch to
 exact calculation of area using the four circle segments that define
 the cell --- and treat a pair of circle segments as forming a portion
-of a frustrum.
+of a frustrum. With regard to overlapping parabola edges in adjacent layers,
+it is a bit fastidious, but at least space filling, though not perfect,
+to treat the the parabola edge as piecewise linear where each breakpoint
+is exactly on the layer (normal to the inner paraboloid). Note that all
+end face areas are identical for the same circle.
 
 Given 4 circle arcs that define cell0, the question of connecivity
 hinges on what other cells have circle arcs that at least partially

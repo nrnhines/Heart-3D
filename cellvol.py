@@ -68,6 +68,29 @@ def test2(): # x, z slice through ipt = 0
       g.flush()
   return g
 
+def test3(): # x, z slice through ipt = 0 (using RegionFace)
+  from neuron import h, gui
+  g = h.Graph(0)
+  g.view(2)
+  for ilayer in range(nlayer):
+    for icircle in range(ncircle[ilayer] - 1):
+      c = cellcorners(ilayer, icircle, 0)
+      rf = paraboloid[ilayer][icircle][2]
+      b0 = rf.p0b[1] if rf and rf.p0b else []
+      b1 = rf.p1b[1] if rf and rf.p1b else []
+      g.beginline(ilayer+1, 1)
+      g.line(c.p000[0], c.p000[2])
+      for p in b0:
+        g.line(p[0], p[2])      
+      g.line(c.p010[0], c.p010[2])
+      g.line(c.p110[0], c.p110[2])
+      for p in reversed(b1):
+        g.line(p[0], p[2])      
+      g.line(c.p100[0], c.p100[2])
+      g.line(c.p000[0], c.p000[2])
+      g.flush()
+  return g
+
 if __name__ == "__main__":
   from p100from import maxiter
   test1(0, 0, 0)
@@ -90,3 +113,4 @@ if __name__ == "__main__":
       cellcorners(ilayer, icircle, 10)
   print ("maxiter = ", maxiter)
   g = test2()
+  g3 = test3()

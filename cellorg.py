@@ -7,9 +7,25 @@ from math import pi, cos, sin, tan
 
 # structure that allows fast calculation of cell position and neighbors
 # paraboloid contains layers contains circle origins
-# The origin is a pair of (r, z) tuples specifying the p000 and p100
+# The origin is a pair of (r, 0.0, z) tuples specifying the p000 and p100
 # corners of the cell/region. These corners are shared by the cell/region
 # (ilayer, icircle-1, 0) corners p010 and p110
+# We really need to save space by using (r, z) instead of (r, 0.0, z)
+# Since each of the four parabola edges is a piecewise linear function
+# between the two corner points and corner points in the adjacent layer,
+# it is useful to also supply those extra interior (r, 0.0, z) points.
+
+# Instead of origin being (p000, p100). It is now
+# ((r, 0.0, z), (r, 0.0, z), RegionFace)
+class RegionFace:
+  def __init__(self):
+    #self.p0 = None # p000
+    #self.p1 = None # p100
+    self.p0b = None  # (jcircle, [p110] of layer-1 where p110 points are between p000 and p010
+    self.p1b = None  # (jcircle, [p010] of layer+1 where p010 points are between p100 and p110
+    # the b stands for breakpoint. This misses the point that there may
+    # be no breakpoints and jcircle is the first circle in the adjacent layer
+    # that is relevant to gap connectivity.
 
 # return number of points on circle
 def circle0_n(pt):
@@ -39,44 +55,42 @@ def morphorg():
   # replace p000 corners with (p000, p100) corner pairs.
   for i in range(p.n_layer):
     for j, p000 in enumerate(paraboloid[i]):
-      paraboloid[i][j] = (p000, p100from(p000, dsep))
+      paraboloid[i][j] = (p000, p100from(p000, dsep), RegionFace())
   npts = [[circle0_n(o[0]) for o in paraboloid[i]] for i in range(p.n_layer)]
   return paraboloid, npts
 
 pt2circle_maxiter = 0
 
-def pt2circle(ilayer, pt):
+def pt2circle(ilayer, pt, use=0):
   global pt2circle_maxiter
-  # given a point in a layer, what is the icircle that contains the point
-  # Note that an icircle domain is from -sep/2 to +sep/2.
+  # given a point in layer, what is the icircle that contains the point
+  # Note that an icircle domain is from 0 to sep in the parabola dimension
   assert(pt[1] == 0.0) # assume x, z on the layer surface.
   circles = paraboloid[ilayer]
-  sep2 = p.layer_surface_circle_distance * .5
+  sep = p.layer_surface_circle_distance
   # kind of a discrete newton method
   # the dz between circles is an increasing function of z so start at end
   i = len(circles) - 1
-  z = circles[i][0][2]
+  z = circles[i][use][2]
   if pt[2] >= z:
-    assert(pt[2] <= z + sep2)
+    assert(pt[2] <= z + sep)
     return i
   maxiter = 0
   while i > 0 and pt[2] < z:
-    dz = z - circles[i-1][0][2]
+    dz = z - circles[i-1][use][2]
     j = int((pt[2] - z)/dz)
     i += j if j else -1
-    z = circles[i][0][2]
-    assert(pt[2] < circles[i+1][0][2])
+    z = circles[i][use][2]
+    assert(pt[2] < circles[i+1][use][2])
     maxiter += 1
     assert (maxiter < 20)
   if maxiter > pt2circle_maxiter:
     pt2circle_maxiter = maxiter
-  if i == 0 and pt[2] < z :
-    assert(pt[2] >= z - sep2)
-    return i
-  d1 = distance(pt, circles[i][0])
-  d2 = distance(pt, circles[i+1][0])
-  if (d1 > d2):
-    i += 1
+  if False and pt[2] < z:
+    print ("ilayer=", ilayer, " pt= ", pt)
+    print ("i=", i)
+    print("pt[2]= ", pt[2], " z=", z)
+  assert(pt[2] >= z - 1e-8)
   return i
 
 paraboloid, npts = morphorg()
@@ -139,84 +153,81 @@ def xyz_center(ilayer, icircle, ipt):
  x2, y2, z2 = xyz(ilayer, icircle, ipt+1)
  return (x1 + x2)/2., (y1 + y2)/2., (z1 + z2)/2.
 
-#fractional edge overlap between (ilayer, icircle, ipt) pt1 and
-# the relevant points in layer, circle
-# the overlapping circle sections
-# return (overlap1, overlap2) where overlaps are the
-# fractional length of sections pt1 and pt2. Note, because circles have
-# different circumference a section in icircle can subtend a one or more
-# sections in circle. Return a list of 3tuples where each tuple is
-# i on circle, fractional overlap of ipt on i, fractional overlap of i on ipt)
-def overlap(pt, layer, circle):
-  deb=False
-  if deb: print("\nenter overlap ", pt, circle)
-  result = []
+# Angle overlap in the circumferential direction
+# between pt=(ilayer, icircle, ipt) and  the relevant points
+# in layer, circle.
+# Return jpt, [angle1, angle2, ...] where jpt is the
+# identifies the first point on circle that overlaps ipt, and the
+# angles are the distal angles that ovelap ipt. Note that
+# the list is empty if the the jpt distal angle is larger than ipt distal
+# angle. The most common overlap is jpt, [angle1], which means that
+# the distal angle of jpt is interior to ipt and the distal angle of
+# jpt+1%npt[layer][circle] is exterior to ipt
+# The overlapping circle sections
+def angle_overlap(pt, jlayer, jcircle):
   ilayer = pt[0]
   icircle = pt[1]
   ipt = pt[2]
-  aesc = ipt2angle(1, layer, circle) # angle of each section on circle
-  aesp = ipt2angle(1, ilayer, icircle) # angle of each section on pcircle
+  ai0 = ipt2angle(ipt, ilayer, icircle) # proximal angle of pt
+  ai1 = ipt2angle(ipt+1, ilayer, icircle) # distal angle of pt
+  if ai1 == 0:
+    ai1 = 2.*pi
 
-  amin = ipt2angle(ipt, ilayer, icircle) # angle of pt on it's own circle is the angle on circle
-  imin = angle2ipt(amin, layer, circle) # imin contains amin
-  aimin = ipt2angle(imin, layer, circle)# angle of imin
-
-  amax = ipt2angle(ipt + 1, ilayer, icircle)
-  imax = angle2ipt(amax, layer, circle) # imax contain amax
-  aimax = ipt2angle(imax, layer, circle)# angle of imax
-  if imax < imin:
-   imax = npts[layer][circle]
-   amax = 2*pi
-   aimax = 2*pi
-
-  if deb: print("ipt=%d amin=%g amax=%g" %(ipt, amin, amax))
-  if deb: print("imin=%d aimin=%g imax=%d aimax=%g" %(imin, aimin, imax, aimax))
-
-  if aimax < amax: #ipt subtends some of the current imax section
-    imax += 1 # could be npt and therefore refer to 0
-    aimax = ipt2angle(imax, layer, circle) # could be 2pi less than true angle
-    if imax == npts[layer][circle]:
-      aimax = 2*pi
-  if deb: print("imin=%d aimin=%g imax=%d aimax=%g" %(imin, aimin, imax, aimax))
-
-  for i in range(imin, imax): # the sections on circle that are involved
-    if deb: print("begin i=%d"%i)
-    # ipt section subtend fraction on circle sections
-    aicprox = ipt2angle(i, layer, circle)
-    fcprox = 0.0 # beginning overlap distance of ipt on i section of circle
-    if aicprox < amin: # fcprox > 0
-      fcprox = fracangle(amin - aicprox, aesc)
-    aicdist = ipt2angle(i + 1, layer, circle)
-    if aicdist < aicprox:
-      aicdist += 2*pi
-    fcdist = 1.0 # ending overlap distance of ipt on i section of circle
-    if aicdist > amax:
-     fcdist = fracangle(amax - aicprox, aesc)
-    if deb: print("i=%d aicprox=%g aicdist=%g" %(i, aicprox, aicdist))
-
-    # circle section subtend fraction on ipt section
-    # Note, the relevant angles are still the same, ie.
-    # amin, amax, aicprox, aicdist, but use aescp instead of aesc
-    # and the angle relationship is opposite
-    fpcprox = 0.0
-    if aicprox > amin:
-      fpcprox = fracangle(aicprox - amin, aesp)
-    fpcdist = 1.0
-    if aicdist < amax:
-      fpcdist = fracangle(aicdist - amin, aesp)
-
-    result.append((i, fcdist - fcprox, fpcdist - fpcprox))
-    if deb: print("end i=%d"%i)
-
-  if deb: print("leave overlap", pt, circle, "\n")
+  jpt = angle2ipt(ai0, jlayer, jcircle) # jpt contains ai0
+  result = (jpt, [])
+  while True:
+    jpt += 1
+    aj0 = ipt2angle(jpt, jlayer, jcircle)
+    if aj0 >= ai1 or aj0 == 0.:
+      break
+    result[1].append(aj0)
+    
   return result
 
-def fracangle(a, a0):
-  # isoceles triangle with vertex angle a0. Return fractional distance
-  # along base from angle a. Note a=0 return 0, a=a0 return 1
-  theta = 0.5*a0
-  phi = a - theta
-  return 0.5*(1.0 + tan(phi)/tan(theta))
+# Interlayer overlap between ilayer, icircle, anything)
+# and the relevant jcircle in jlayer (must be ilayer + 1 or ilayer - 1)
+# Fill in the RegionFace info for both parabola edges.
+# with jcircle, [p, ..] where jcircle identifies
+# the first circle that overlaps icircle and the p are the (r, 0, z)p000
+# for jcircle+1, etc, that are interior to parabola edge.
+# Note that the list is empty if there are no interior points.
+def fill_interlayer_overlap(paraboloid, ilayer, icircle):
+  if icircle >= ncircle[ilayer] - 1:
+    return # the last circle has no RegionFace
+  o0i = paraboloid[ilayer][icircle]
+  o1i = paraboloid[ilayer][icircle + 1]
+  rf = o0i[2]
+
+  # (i=0,j=1 for jlayer = ilayer - 1) and (i=1,j=0 for jlayer = ilayer + 1)
+  for jlayer in range(ilayer-1, ilayer+2, 2):
+    if jlayer >= 0 and jlayer < nlayer:
+      i,j = (0,1) if jlayer < ilayer else (1,0)
+      nj = ncircle[jlayer]
+      a = o0i[i] # p100i for ilayer
+      b = o1i[i] # p110i
+      # what is jcircle
+      jcircle = pt2circle(jlayer, a, use=j)
+      c = paraboloid[jlayer][jcircle][j] # p000j
+      if c[2] > a[2]:
+        jcircle -= 1
+      result = (jcircle, [])
+      while True:
+        jcircle += 1
+        if (jcircle >= nj):
+          break
+        c = paraboloid[jlayer][jcircle][j]
+        if c[2] >= b[2]:
+          break
+        result[1].append(c)
+      if i == 1:
+        rf.p1b = result
+      else:
+        rf.p0b = result
+
+# Fill in the RegionFace info of paraboloid
+for ilayer in range(nlayer):
+  for icircle in range(ncircle[ilayer]):
+    fill_interlayer_overlap(paraboloid, ilayer, icircle)
 
 def ipt2angle(ipt, ilayer, icircle):
   n = npts[ilayer][icircle]
@@ -319,14 +330,12 @@ def test5(): #pt2circle
     g.mark(p1[0], p1[2], "|", 10, 2, 1)
     g.mark(o1[i][0][0], o1[i][0][2], "|", 10, 3, 1)
     d1 = distance(p1, o1[i][0])
-    if i > 0 and p1[2] < o1[i][0][2]:
-      d2 = distance(p1, o1[i-1][0])
-      print(i, " < ", distance(p1, o1[i][0]), distance(p1, o1[i-1][0]))
-      assert (d1 <= d2)
-    if i < len(o1)-1 and p1[2] > o1[i][0][2]:
-      d2 = distance(p1, o1[i+1][0])
-      print(i, " > ", distance(p1, o1[i][0]), distance(p1, o1[i+1][0]))
-      assert (d1 <= d2)
+    if i < len(o1)-1:
+      zi = o1[i][0][2]
+      z = p1[2]
+      zip = o1[i+1][0][2]
+      print("zi=%g z=%g zip=%g"%(zi, z, zip))
+      assert (zi <= z+1e-9 and z <= zip+1e-9)
   return g
 
 if __name__ == "__main__":
