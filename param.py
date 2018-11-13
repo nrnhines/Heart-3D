@@ -32,6 +32,9 @@ layer_surface_circle_distance = 500.
 layer_thickness = 500.
 nominal_region_length = 500.
 
+cell_length = 100.
+cell_diameter = 30.
+
 n_layer = int(nominal_thickness/layer_thickness)
 
 abc = (1/nominal_base_radius**2, 1/nominal_base_radius**2, 1/nominal_height)

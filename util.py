@@ -12,6 +12,10 @@ def side_area(p1, p2, angle):
   x = frustum_area(p2[2] - p1[2], p1[0], p2[0])
   return angle*x/(2.*pi)
 
+def area3pt(pts):
+  d = [distance(pts[i], pts[(i+1)%3]) for i in range(3)]
+  return accurate_triangle_area(*d)
+
 def accurate_triangle_area(x, y, z):
   # x,y,z sides of triangle
   # from http://http.cs.berkeley.edu/~wkahan/Triangle.pdf

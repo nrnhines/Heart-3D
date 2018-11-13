@@ -106,7 +106,7 @@ for ilayer in range(p.n_layer):
   layer_offset.append(layer_offset[-1] + circle_offset[ilayer][-1])
 
 def org2gid(ilayer, icircle, ipt):
-  gid = layer_offset[ilayer] + circle_offset[ilayer][icircle] + ipt
+  gid = layer_offset[ilayer] + circle_offset[ilayer][icircle] + ipt%npts[ilayer][icircle]
   return gid
   
 def gid2org(gid):
