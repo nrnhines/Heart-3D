@@ -1,4 +1,4 @@
-from common import h, pc, rank, nhost, timeit
+from common import h, pc, rank, nhost, timeit, pr
 from cellconread import cellconread, gidinfo, connections, ncell, ncon
 import snapsh
 import ecg
@@ -54,7 +54,7 @@ def special_gap_params():
   try:
     f = open('Connections_Other_Information.txt')
   except:
-    if rank == 0: print 'No special gap parameters'
+    pr('No special gap parameters')
     return
   gidpair2ncon = {}
   for ncon in connections:
@@ -79,9 +79,9 @@ def special_gap_params2(i, info, gidpair2ncon):
     elif (info[1], info[0]) in gidpair2ncon:
       ncon = gidpair2ncon[(info[1], info[0])]
     else:
-      print "%d pair %s not found"%(rank, pair.__str__())
+      print ("%d pair %s not found"%(rank, pair.__str__()))
       return
-    #print "%d %s"%(rank, connections[ncon].__str__())
+    #print ("%d %s"%(rank, connections[ncon].__str__()))
     gap = gaps[ncon]
     gmin, gmax, gvar, tc, tcvar, drift = info[2:]
     gap.meang = gmax

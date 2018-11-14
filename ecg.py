@@ -1,3 +1,4 @@
+from __future__ import print_function
 from common import h, pc, rank, nhost
 from net3d import gidinfo
 from math import sqrt
@@ -92,8 +93,8 @@ def test():
 if __name__ == '__main__':
   # test() invalid test
   for i in range(len(ecg_t)):
-    print ecg_t.x[i],
+    print (ecg_t.x[i], end='')
     for j in range(nelectrode):
-      print ecg_v[j].x[i],
-    print ""
+      print (ecg_v[j].x[i], end='')
+    print ("")
 

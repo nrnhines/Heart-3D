@@ -54,7 +54,7 @@ def cellconread():
 
 if __name__ == '__main__':
   cellconread()
-  print len(gidinfo), len(connections)
+  print ("%d %d" % (len(gidinfo), len(connections)))
 
 
 

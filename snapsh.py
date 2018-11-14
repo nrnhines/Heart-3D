@@ -35,7 +35,7 @@ def snapsh_init():
   h.cvode.event(h.t + snapshot_begin, snapshout)
 
 def snapsh():
-  # print 'snapsh t=%g' % pc.t(0)
+  # print ('snapsh t=%g' % pc.t(0))
   somav_ptrvec.gather(somav_vec)
 
 def snapsh_setup():
@@ -58,7 +58,5 @@ def snapshout():
 if __name__ == '__main__':
   # test() invalid test
   for i in range(n):
-    print i,
-    print somav_vec.x[i],
-    print ""
+    print ("%d %g" %(i, somav_vec.x[i]))
 
