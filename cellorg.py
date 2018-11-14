@@ -1,3 +1,5 @@
+from common import timeit, pr
+timeit()
 import param as p
 from morphdef import circle_origins
 from morphdef import distance, const_sep_layer_origins, addmul, normgrad
@@ -104,6 +106,9 @@ for ilayer in range(p.n_layer):
   for npt in npts[ilayer]:
     circle_offset[ilayer].append(circle_offset[ilayer][-1] + npt)
   layer_offset.append(layer_offset[-1] + circle_offset[ilayer][-1])
+
+timeit("abstract model definition")
+pr("ngid = %d"%ngid)
 
 def org2gid(ilayer, icircle, ipt):
   gid = layer_offset[ilayer] + circle_offset[ilayer][icircle] + ipt%npts[ilayer][icircle]

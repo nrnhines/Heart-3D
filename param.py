@@ -21,6 +21,9 @@
 # a layer overlap in the lenght direction. Regions of adjacent layers
 # overlap in both the length and adjacent circle dimension.
 
+cell_length = 100.
+cell_diameter = 30.
+
 # Overall macroscopic shape
 nominal_height = 50000.
 nominal_base_radius = 15000.
@@ -28,12 +31,10 @@ nominal_thickness = 5000.
 hole_radius = 500.
 
 # Region discretization
-layer_surface_circle_distance = 500.
-layer_thickness = 500.
-nominal_region_length = 500.
-
-cell_length = 100.
-cell_diameter = 30.
+cellbased = False
+layer_surface_circle_distance = cell_diameter if cellbased else 500.
+layer_thickness = cell_diameter if cellbased else 500.
+nominal_region_length = cell_length if cellbased else 500.
 
 n_layer = int(nominal_thickness/layer_thickness)
 
