@@ -21,6 +21,8 @@
 # a layer overlap in the lenght direction. Regions of adjacent layers
 # overlap in both the length and adjacent circle dimension.
 
+from common import pr
+
 cell_length = 100.
 cell_diameter = 30.
 
@@ -39,4 +41,8 @@ nominal_region_length = cell_length if cellbased else 500.
 n_layer = int(nominal_thickness/layer_thickness)
 
 abc = (1/nominal_base_radius**2, 1/nominal_base_radius**2, 1/nominal_height)
+
+pr("layer_surface_circle_distance %g" % layer_surface_circle_distance)
+pr("layer_thickness %g" % layer_thickness)
+pr("nominal_region_length %g" % nominal_region_length)
 
