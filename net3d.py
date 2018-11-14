@@ -1,4 +1,4 @@
-from common import h, pc, rank, nhost
+from common import h, pc, rank, nhost, timeit
 from cellconread import cellconread, gidinfo, connections, ncell, ncon
 import snapsh
 import ecg
@@ -13,6 +13,7 @@ class CellInfo:
     self.gaps = {} # cid:HalfGap where cid is key in connections
 
 def mkcells(gidinfo):
+  timeit()
   for gid in gidinfo:
     x,y,z = gidinfo[gid]
     cell = h.Cell()
@@ -21,8 +22,10 @@ def mkcells(gidinfo):
     pc.set_gid2node(gid, rank)
     nc = cell.connect2target(None)
     pc.cell(gid, nc)
+  timeit("mkcells")
 
 def mkgaps(gidinfo, connections):
+  timeit()
   mark = set()
   for cid in connections:
     gid1, gid2 = connections[cid]
@@ -30,6 +33,7 @@ def mkgaps(gidinfo, connections):
     mkhalfgap(gid1, gid2, 1, cid, gidinfo, mark)
     mkhalfgap(gid2, gid1, -1, cid, gidinfo, mark)
   pc.setup_transfer()
+  timeit("mkgaps")
 
 def mkhalfgap(gid1, gid2, gid2_polarity, cid, gidinfo, mark):
   # sgid is the gid for the voltage since single compartment
