@@ -5,8 +5,6 @@ import ecg
 from gjrecord import gj_record, gj_out
 import mkgap
 
-cellconread()
-
 class CellInfo:
   def __init__(self, cell):
     self.cell = cell
@@ -106,6 +104,11 @@ def setallgaps(meang, interval, drift):
 
 def mknet():
   h.load_file("cell.hoc")
+
+  timeit()
+  cellconread()
+  timeit("cellconread makes gapinfo")
+
   mkcells(gidinfo)
   mkgaps(gidinfo, connections)
   setallgaps(30.0, 1000.0, 0.0)

@@ -75,7 +75,7 @@ def pt2circle(ilayer, pt, use=0):
   i = len(circles) - 1
   z = circles[i][use][2]
   if pt[2] >= z:
-    assert(pt[2] <= z + sep)
+    #assert(pt[2] <= z + sep) # bug since sep is larger for greater layers
     return i
   maxiter = 0
   while i > 0 and pt[2] < z:

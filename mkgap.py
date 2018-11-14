@@ -80,13 +80,14 @@ def gaps_for_gid(gid):
   gs = []
 
   #circum coordinate, end to end
-  npt = npts[ilayer][icircle]
-  area = area_circum(ilayer, icircle)
-  for jpt in [ipt - 1, ipt + 1]:
-    dens_ipt = ipt if jpt < ipt else jpt%npts[ilayer][icircle]
-    g = conductance_density_circum(ilayer, icircle, dens_ipt)
-    g2 = org2gid(ilayer, icircle, jpt)
-    gs.append(set_gap(gid, g2, abscond(area, g)))
+  if icircle < ncircle[ilayer] - 1:
+    npt = npts[ilayer][icircle]
+    area = area_circum(ilayer, icircle)
+    for jpt in [ipt - 1, ipt + 1]:
+      dens_ipt = ipt if jpt < ipt else jpt%npts[ilayer][icircle]
+      g = conductance_density_circum(ilayer, icircle, dens_ipt)
+      g2 = org2gid(ilayer, icircle, jpt)
+      gs.append(set_gap(gid, g2, abscond(area, g)))
 
   # between layers
   if icircle < ncircle[ilayer] - 1:
