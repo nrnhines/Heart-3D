@@ -124,11 +124,17 @@ def gid2org(gid):
 itermax=0
 
 def gid2layer(gid): # return last i where layer_offset[i] <= gid
-  # ugh linear search
-  for i in range(1, p.n_layer + 1):
-    if gid < layer_offset[i]:
-      return i - 1
-  assert(False)
+  # nlayerpts is concave so use discrete newton method iwth decreasing indices
+  i = nlayer - 1
+  iter = 0
+  while True:
+    if layer_offset[i] <= gid:
+      break
+    i -= int((layer_offset[i] - gid)/nlayerpts[i]) + 1
+    iter += 1
+  global itermax
+  if iter > itermax: itermax = iter
+  return i
 
 def gid2org_help_circle(ilayer, r): # return last i where circle_offset[i] <= r
   # note npts is concave
