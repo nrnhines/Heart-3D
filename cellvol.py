@@ -70,10 +70,12 @@ def test2(): # x, z slice through ipt = 0
 
 def test3(): # x, z slice through ipt = 0 (using RegionFace)
   from neuron import h, gui
+  from cellorg import is_simulated, xyz, distance
   g = h.Graph(0)
   g.view(2)
   for ilayer in range(nlayer):
     for icircle in range(ncircle[ilayer] - 1):
+     if is_simulated(xyz(ilayer, icircle, 0)):
       c = cellcorners(ilayer, icircle, 0)
       rf = paraboloid[ilayer][icircle][2]
       b0 = rf.p0b[1] if rf and rf.p0b else []
@@ -112,5 +114,5 @@ if __name__ == "__main__":
     for icircle in range(ncircle[ilayer]-1):
       cellcorners(ilayer, icircle, 10)
   print ("maxiter = ", maxiter)
-  g = test2()
+  #g = test2()
   g3 = test3()

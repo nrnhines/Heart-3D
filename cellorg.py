@@ -145,11 +145,18 @@ def gid2org_help_circle(ilayer, r): # return last i where circle_offset[i] <= r
   while True:
     if circle_offset[ilayer][i] <= r:
       break
-    i -= int((circle_offset[ilayer][i] - r)/npts[ilayer][i]) + 1
+    j = int((circle_offset[ilayer][i] - r)/npts[ilayer][i])
+    i -= j if j else 1
     iter += 1
   global itermax
   if iter > itermax: itermax = iter
   return i
+
+def gid_is_simulated(gid):
+  return is_simulated(xyz(*gid2org(gid)))
+
+def is_simulated(xyz):
+    return distance(xyz, p.simulation_center) < p.simulation_region
 
 def xyz(ilayer, icircle, ipt): # note that ipt refers to the proximal point on the section
   n = npts[ilayer][icircle]

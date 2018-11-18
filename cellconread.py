@@ -42,7 +42,11 @@ def cellconread():
 
   ncell = cellorg.ngid
   for gid in range(rank, ncell, nhost):
-    gidinfo[gid] = cellorg.xyz(*cellorg.gid2org(gid))
+    ilayer, icircle, ipt = cellorg.gid2org(gid)
+    if icircle < cellorg.ncircle[ilayer] - 1:
+      xyz = cellorg.xyz(ilayer, icircle, ipt)
+      if cellorg.is_simulated(xyz):
+        gidinfo[gid] = xyz
 
   for gid in gidinfo:
     mkgap.gaps_for_gid(gid)

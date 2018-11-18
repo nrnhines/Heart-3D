@@ -1,7 +1,7 @@
 import param
 from morphdef import distance
 from cellorg import gid2org, org2gid, angle_overlap, nlayer, ncircle, npts, xyz
-from cellorg import paraboloid, ipt2angle
+from cellorg import paraboloid, ipt2angle, gid_is_simulated
 from util import side_area, area3pt
 
 def conductance_density_circum(ilayer, icircle, ipt):
@@ -33,7 +33,7 @@ def area_circum(ilayer, icircle):
 
 gaps = {}
 
-def isclose(a, b, abs_tol=1e-9):
+def isclose(a, b, abs_tol=1e-7):
   return abs(a - b) < abs_tol
 
 class GapInfo:
@@ -43,10 +43,12 @@ class GapInfo:
 
   def same(self, gid1, gid2, g):
     g1, g2 = (gid1, gid2) if gid1 < gid2 else (gid2, gid1)
-    if  gid1 != self.gid1 or gid2 != self.gid2:
+    if  g1 != self.gid1 or g2 != self.gid2:
       return False
     if isclose(g, self.g):
       return True
+    else:
+      print ("same (%d,%d) %.20g   (%d, %d) %.20g" %(gid1, gid2, g, self.gid1, self.gid2, self.g))
     return False
 
   def __repr__(self):
@@ -70,6 +72,8 @@ def get_gap(gid1, gid2):
     return None
 
 def gaps_for_gid(gid):
+  if not gid_is_simulated(gid):
+      return None
   o = gid2org(gid)
   ilayer, icircle, ipt = o
   pinfo = paraboloid[ilayer][icircle]
@@ -87,7 +91,7 @@ def gaps_for_gid(gid):
       dens_ipt = ipt if jpt < ipt else jpt%npts[ilayer][icircle]
       g = conductance_density_circum(ilayer, icircle, dens_ipt)
       g2 = org2gid(ilayer, icircle, jpt)
-      gs.append(set_gap(gid, g2, abscond(area, g)))
+      if gid_is_simulated(g2): gs.append(set_gap(gid, g2, abscond(area, g)))
 
   # between layers
   if icircle < ncircle[ilayer] - 1:
@@ -109,7 +113,7 @@ def gaps_for_gid(gid):
             g2 = org2gid(jlayer, jcircle, jpt)
             dens_layer, dens_circle, dens_ipt = (ilayer, icircle, ipt) if jlayer < ilayer else (jlayer, jcircle, jpt)
             g = conductance_density_layer(dens_layer, dens_circle, dens_ipt)
-            gs.append(set_gap(gid, g2, abscond(area, g)))
+            if gid_is_simulated(g2) and jcircle < ncircle[jlayer] - 1: gs.append(set_gap(gid, g2, abscond(area, g)))
             jpt += 1
             a0 = a1
           jcircle += 1
@@ -132,7 +136,7 @@ def gaps_for_gid(gid):
         dens_circle, dens_ipt = (icircle, ipt) if jcircle < icircle else (jcircle, jpt)
         g = conductance_density_parabola(ilayer, dens_circle, dens_ipt)
         g2 = org2gid(jlayer, jcircle, jpt)
-        gs.append(set_gap(gid, g2, abscond(area, g)))
+        if gid_is_simulated(g2) and jcircle < ncircle[jlayer] - 1: gs.append(set_gap(gid, g2, abscond(area, g)))
         jpt += 1
         a0 = a1
 

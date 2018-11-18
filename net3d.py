@@ -8,7 +8,7 @@ import mkgap
 class CellInfo:
   def __init__(self, cell):
     self.cell = cell
-    self.gaps = {} # cid:HalfGap where cid is key in connections
+    self.gaps = {} # srcgid:HalfGap
 
 def mkcells(gidinfo):
   timeit()
@@ -20,6 +20,8 @@ def mkcells(gidinfo):
     pc.set_gid2node(gid, rank)
     nc = cell.connect2target(None)
     pc.cell(gid, nc)
+  x = pc.allreduce(len(gidinfo), 1)
+  pr("Global number of real cells is %d"%x)
   timeit("mkcells")
 
 def mkgaps(gidinfo, connections):
@@ -27,13 +29,20 @@ def mkgaps(gidinfo, connections):
   mark = set()
   for cid in connections:
     gid1, gid2 = connections[cid]
-    g = mkgap.get_gap(gid1, gid2)
-    mkhalfgap(gid1, gid2, 1, cid, gidinfo, mark)
-    mkhalfgap(gid2, gid1, -1, cid, gidinfo, mark)
+    gapinfo = mkgap.get_gap(gid1, gid2)
+    mkhalfgap(gid1, gid2, 1, gapinfo, gidinfo, mark)
+    mkhalfgap(gid2, gid1, -1, gapinfo, gidinfo, mark)
   pc.setup_transfer()
+
+  x = 0
+  for cell in gidinfo.values():
+    x += len(cell.gaps)
+  x = pc.allreduce(x, 1)
+  pr("Global number of halfgap is %d"%x)
+
   timeit("mkgaps")
 
-def mkhalfgap(gid1, gid2, gid2_polarity, cid, gidinfo, mark):
+def mkhalfgap(gid1, gid2, gid2_polarity, gapinfo, gidinfo, mark):
   # sgid is the gid for the voltage since single compartment
   global ncon
 
@@ -42,8 +51,10 @@ def mkhalfgap(gid1, gid2, gid2_polarity, cid, gidinfo, mark):
     cell = cell1.cell
     gap = h.HalfGap(cell.soma(.5))
     gap.id = gid2_polarity
+    gap.g = gapinfo.g
     pc.target_var(gap, gap._ref_vgap, gid2)
-    cell1.gaps[cid] = gap
+    assert(gid2 not in cell1.gaps)
+    cell1.gaps[gid2] = gap
     if gid1 not in mark:
       pc.source_var(cell.soma(.5)._ref_v, gid1, sec=cell.soma)
       mark.add(gid1)
@@ -120,5 +131,17 @@ def mkmodel():
   #snapsh.snapsh_setup()
   ecg.ecg_setup()
 
+def test1():
+  pc.barrier()
+  for gid1 in gidinfo:
+    cellinfo = gidinfo[gid1]
+    for gid2, gap in cellinfo.gaps.items():
+      print ("%d %d %g" %(gid1, gid2, gap.g))
+  pc.barrier()
+
 if __name__ == '__main__':
   mknet()
+  #test1()
+  if pc.nhost() > 1:
+    pc.barrier()
+    h.quit()
