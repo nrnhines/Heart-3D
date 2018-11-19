@@ -3,7 +3,10 @@ from cellconread import cellconread, gidinfo, connections, ncell, ncon
 import snapsh
 import ecg
 from gjrecord import gj_record, gj_out
+from cellorg import gid2org, xyz
 import mkgap
+from math import pi
+from util import isclose
 
 class CellInfo:
   def __init__(self, cell):
@@ -16,6 +19,23 @@ def mkcells(gidinfo):
     x,y,z = gidinfo[gid]
     cell = h.Cell()
     gidinfo[gid] = CellInfo(cell)
+
+    # cell shape is actually an arc and area is fastidious with respect
+    # to all 6 sides. But length
+    # treated as line distance between org points (interior corners
+    # in circumferential direction. Set diam so area is correct including
+    # end areas.
+    cell.soma.pt3dclear()
+    cell.soma.pt3dadd(x,y,z, 1.)
+    ilayer, icircle, ipt = gid2org(gid)
+    x1,y1,z1 = xyz(ilayer, icircle, ipt + 1)
+    cell.soma.pt3dadd(x1, y1, z1, 1.)
+    length = cell.soma.L
+    area = sum(mkgap.cell_side_areas(gid))
+    diam = area/pi/length
+    cell.soma.diam = diam
+    assert(isclose(cell.soma(.5).area(), area, abs_tol=area*1e-5))
+
     cell.position(x,y,z)
     pc.set_gid2node(gid, rank)
     nc = cell.connect2target(None)
@@ -139,9 +159,17 @@ def test1():
       print ("%d %d %g" %(gid1, gid2, gap.g))
   pc.barrier()
 
+def test2():
+  from matplotlib import pyplot
+  pyplot.hist([c.cell.soma(.5).area() for c in gidinfo.values()])
+  pyplot.show()
+  pyplot.hist([c.cell.soma.L for c in gidinfo.values()])
+  pyplot.show()
+
 if __name__ == '__main__':
   mknet()
   #test1()
+  test2()
   if pc.nhost() > 1:
     pc.barrier()
     h.quit()

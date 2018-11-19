@@ -2,7 +2,7 @@ import param
 from morphdef import distance
 from cellorg import gid2org, org2gid, angle_overlap, nlayer, ncircle, npts, xyz
 from cellorg import paraboloid, ipt2angle, gid_is_simulated
-from util import side_area, area3pt
+from util import side_area, area3pt, isclose
 
 def conductance_density_circum(ilayer, icircle, ipt):
   return 1.0
@@ -32,9 +32,6 @@ def area_circum(ilayer, icircle):
   return area
 
 gaps = {}
-
-def isclose(a, b, abs_tol=1e-7):
-  return abs(a - b) < abs_tol
 
 class GapInfo:
   def __init__(self, gid1, gid2, g):
@@ -141,6 +138,43 @@ def gaps_for_gid(gid):
         a0 = a1
 
   return gs
+
+def cell_side_areas(gid):
+  o = gid2org(gid)
+  ilayer, icircle, ipt = o
+  assert(icircle < ncircle[ilayer] - 1)
+  pinfo = paraboloid[ilayer][icircle]
+  rf = pinfo[2] # RegionFace
+  a = ipt2angle(1, ilayer, icircle)
+
+  #circum coordinate, end to end
+  area = area_circum(ilayer, icircle)
+  side_areas = [area, area]
+
+  # between layers
+  if icircle < ncircle[ilayer] - 1:
+    pinfo1 = paraboloid[ilayer][icircle+1]
+    for jlayer in [ilayer - 1, ilayer + 1]:
+        area = 0.
+
+        #jcircle, b = rf.p0b if jlayer < ilayer else rf.p1b
+        p0, plast, pb = (pinfo[0], pinfo1[0], rf.p0b) if jlayer < ilayer else (pinfo[1], pinfo1[1], rf.p1b)
+        jcircle, b = pb if pb else (0, [])
+
+        for p1 in b + [plast]:
+          area += side_area(p0, p1, a)
+          p0 = p1
+        side_areas.append(area)
+
+  # between circles in same layer
+  jlayer = ilayer
+  for jcircle in [icircle - 1, icircle + 1]:
+      pinfo1 = paraboloid[ilayer][jcircle] if jcircle > icircle else None
+      p0, p1 = (pinfo[0], pinfo[1]) if jcircle < icircle else (pinfo1[0], pinfo1[1])
+      area = side_area(p0, p1, a)
+      side_areas.append(area)
+
+  return side_areas
 
 def test1(ilayer, icircle, ipt):
   print (gaps_for_gid(org2gid(ilayer, icircle, ipt)))

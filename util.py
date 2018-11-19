@@ -1,6 +1,12 @@
 from math import sqrt, pi
 from morphdef import distance
 
+def isclose(a, b, abs_tol=1e-7):
+  r = abs(a - b) < abs_tol
+  if r == False:
+    print("isclose %20g %20g %g" % (a, b, abs_tol))
+  return r
+
 # area of 4 xyz pts (with pt[1] = 0.0)
 def end_area(pts):
   d = [distance(pts[i], pts[(i+1)%4]) for i in range(4)]
