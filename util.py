@@ -1,6 +1,9 @@
 from math import sqrt, pi
 from morphdef import distance
 
+def hash52(o):
+  return o.__hash__() & 0xfffffffffffff # up to 52bits
+
 def isclose(a, b, abs_tol=1e-7):
   r = abs(a - b) < abs_tol
   if r == False:

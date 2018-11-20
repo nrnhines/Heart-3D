@@ -6,7 +6,9 @@ from gjrecord import gj_record, gj_out
 from cellorg import gid2org, xyz
 import mkgap
 from math import pi
-from util import isclose
+from util import isclose, hash52
+
+h.load_file("verifygap.hoc")
 
 class CellInfo:
   def __init__(self, cell):
@@ -44,14 +46,14 @@ def mkcells(gidinfo):
   pr("Global number of real cells is %d"%x)
   timeit("mkcells")
 
-def mkgaps(gidinfo, connections):
+def mkgaps(gidinfo, gaps):
   timeit()
   mark = set()
-  for cid in connections:
-    gid1, gid2 = connections[cid]
-    gapinfo = mkgap.get_gap(gid1, gid2)
-    mkhalfgap(gid1, gid2, 1, gapinfo, gidinfo, mark)
-    mkhalfgap(gid2, gid1, -1, gapinfo, gidinfo, mark)
+  for gapinfo in gaps.values():
+    gg = (gapinfo.gid1, gapinfo.gid2)
+    id = hash52(gg)
+    mkhalfgap(gg[0], gg[1], id, gapinfo.g, gidinfo, mark)
+    mkhalfgap(gg[1], gg[0], -id, gapinfo.g, gidinfo, mark)
   pc.setup_transfer()
 
   x = 0
@@ -62,7 +64,7 @@ def mkgaps(gidinfo, connections):
 
   timeit("mkgaps")
 
-def mkhalfgap(gid1, gid2, gid2_polarity, gapinfo, gidinfo, mark):
+def mkhalfgap(gid1, gid2, id, g, gidinfo, mark):
   # sgid is the gid for the voltage since single compartment
   global ncon
 
@@ -70,8 +72,8 @@ def mkhalfgap(gid1, gid2, gid2_polarity, gapinfo, gidinfo, mark):
     cell1 = gidinfo[gid1]
     cell = cell1.cell
     gap = h.HalfGap(cell.soma(.5))
-    gap.id = gid2_polarity
-    gap.g = gapinfo.g
+    gap.id = id
+    gap.g = g
     pc.target_var(gap, gap._ref_vgap, gid2)
     assert(gid2 not in cell1.gaps)
     cell1.gaps[gid2] = gap
@@ -141,9 +143,10 @@ def mknet():
   timeit("cellconread makes gapinfo")
 
   mkcells(gidinfo)
-  mkgaps(gidinfo, connections)
-  setallgaps(30.0, 1000.0, 0.0)
-  special_gap_params()
+  mkgaps(gidinfo, mkgap.gaps)
+  #setallgaps(30.0, 1000.0, 0.0)
+  #special_gap_params()
+  h.verifyHalfGap()
 
 
 def mkmodel():
@@ -153,11 +156,13 @@ def mkmodel():
 
 def test1():
   pc.barrier()
-  for gid1 in gidinfo:
-    cellinfo = gidinfo[gid1]
-    for gid2, gap in cellinfo.gaps.items():
-      print ("%d %d %g" %(gid1, gid2, gap.g))
-  pc.barrier()
+  for r in range(nhost):
+    if r == rank:
+      for gid1 in gidinfo:
+        cellinfo = gidinfo[gid1]
+        for gid2, gap in cellinfo.gaps.items():
+          print ("%d %d %g" %(gid1, gid2, gap.g))
+    pc.barrier()
 
 def test2():
   from matplotlib import pyplot
@@ -165,11 +170,13 @@ def test2():
   pyplot.show()
   pyplot.hist([c.cell.soma.L for c in gidinfo.values()])
   pyplot.show()
+  pyplot.hist([gap.g for gap in mkgap.gaps.values()])
+  pyplot.show()
 
 if __name__ == '__main__':
   mknet()
   #test1()
-  test2()
+  #test2()
   if pc.nhost() > 1:
     pc.barrier()
     h.quit()

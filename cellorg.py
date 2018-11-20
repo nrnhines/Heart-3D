@@ -41,7 +41,7 @@ def circle_discrete(n, pt):
   r = pt[0]
   pts = []
   for i in range(n):
-    a = 2.*pi*i/n
+    a = (2.*pi/n)*i
     pts.append((r*cos(a), r*sin(a), z))
   return pts
 
@@ -162,7 +162,7 @@ def xyz(ilayer, icircle, ipt): # note that ipt refers to the proximal point on t
   n = npts[ilayer][icircle]
   ipt = ipt%n # wrap around
   pt = paraboloid[ilayer][icircle][0]
-  a = 2*pi*ipt/n
+  a = (2*pi/n)*ipt
   r = pt[0]
   return r*cos(a), r*sin(a), pt[2]
 
@@ -250,11 +250,11 @@ for ilayer in range(nlayer):
 def ipt2angle(ipt, ilayer, icircle):
   n = npts[ilayer][icircle]
   ipt = ipt%n # occasionally convenient for ipt = -1
-  return 2*pi*ipt/n
+  return (2*pi/n)*ipt
 
 def angle2ipt(angle, ilayer, icircle): #ipt that contains angle (note that ipt refers to the proximal point on the section)
   n = npts[ilayer][icircle]
-  return int(angle*n/(2*pi))%n
+  return int(angle*(n/(2*pi)))%n
 
 def test1():
   from time import time

@@ -1,0 +1,62 @@
+{load_file("stdlib.hoc")}
+// verify that all corresponding HalfGap have the same HalfGap.g
+// Do this is a distributed way if running in parallel by sending
+// all the id, g info to the rank abs(id)%nhost
+
+proc verifyHalfGap() {local i, n \
+  localobj hglist, hg, vcnts, vdispl, idsrc, gsrc, iddest, gdest, s, vsrt, pc
+	pc = new ParallelContext()
+	hglist = new List("HalfGap")
+	n = pc.nhost
+	vcnts = new Vector(n)
+	for i=0, hglist.count-1 {
+		hg = hglist.o(i)
+		vcnts.x[(abs(hg.id)-1)%n] += 1
+	}
+	vdispl = new Vector(n+1)
+	for i=0, n-1 {
+		vdispl.x[i+1] = vdispl.x[i] + vcnts.x[i]
+	}
+	idsrc = new Vector(vdispl.x[n])
+	gsrc = new Vector(vdispl.x[n])
+	for i=0, hglist.count-1 {
+		hg = hglist.o(i)
+		aid = abs(hg.id)
+		j = (aid-1)%n
+		idsrc.x[vdispl.x[j]] = aid
+		gsrc.x[vdispl.x[j]] = hg.g
+		vdispl.x[j] += 1
+	}
+
+	iddest = new Vector()
+	gdest = new Vector()
+	if (n == 1) {
+		iddest = idsrc.c
+		gdest = gsrc.c
+	}else{
+		pc.alltoall(idsrc, vcnts, iddest)
+		pc.alltoall(gsrc, vcnts, gdest)
+	}
+	vsrt = iddest.sortindex
+	idsrc.index(iddest, vsrt)
+	gsrc.index(gdest, vsrt)		
+	s = new String()
+	for (i=0; i < idsrc.size; i += 2) {
+		if (idsrc.x[i] != idsrc.x[i+1]) {
+			sprint(s.s, "Only one of a pair of HalfGap for %.20g\n", idsrc.x[i])
+			execerror(s.s)
+		}
+		if (i > 0) {
+			if (idsrc.x[i] == idsrc.x[i-1]) {
+sprint(s.s, "More than two HalfGap share the same id %.20g\n", idsrc.x[i])
+				execerror(s.s)
+			}
+		}
+		if (gsrc.x[i] != gsrc.x[i+1]) {
+			s = new String()
+sprint(s.s, "At t=%g, for HalfGap.id %d, g differs: %.20g %g\n", t, idsrc.x[i],\
+gsrc.x[i], gsrc.x[i+1])
+			execerror(s.s)
+		}
+	}
+}
