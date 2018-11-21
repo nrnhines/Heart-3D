@@ -52,8 +52,8 @@ def mkgaps(gidinfo, gaps):
   for gapinfo in gaps.values():
     gg = (gapinfo.gid1, gapinfo.gid2)
     id = hash52(gg)
-    mkhalfgap(gg[0], gg[1], id, gapinfo.g, gidinfo, mark)
-    mkhalfgap(gg[1], gg[0], -id, gapinfo.g, gidinfo, mark)
+    mkhalfgap(gg[0], gg[1], id, gidinfo, mark)
+    mkhalfgap(gg[1], gg[0], -id, gidinfo, mark)
   pc.setup_transfer()
 
   x = 0
@@ -64,7 +64,7 @@ def mkgaps(gidinfo, gaps):
 
   timeit("mkgaps")
 
-def mkhalfgap(gid1, gid2, id, g, gidinfo, mark):
+def mkhalfgap(gid1, gid2, id, gidinfo, mark):
   # sgid is the gid for the voltage since single compartment
   global ncon
 
@@ -73,7 +73,7 @@ def mkhalfgap(gid1, gid2, id, g, gidinfo, mark):
     cell = cell1.cell
     gap = h.HalfGap(cell.soma(.5))
     gap.id = id
-    gap.g = g
+    gap.g = 0.0
     pc.target_var(gap, gap._ref_vgap, gid2)
     assert(gid2 not in cell1.gaps)
     cell1.gaps[gid2] = gap
@@ -125,12 +125,14 @@ def special_gap_params2(i, info, gidpair2ncon):
     gap.drift=drift
 
 def setallgaps(meang, interval, drift):
-  for cellinfo in gidinfo.values():
-    for gap in cellinfo.gaps.values():
-      gap.meang = meang
-      gap.gmax = meang
-      gap.gmin = meang
-      gap.g = meang
+  for gid1, cellinfo in gidinfo.items():
+    for gid2, gap in cellinfo.gaps.items():
+      area = mkgap.gaps[(gid1, gid2) if gid1 < gid2 else (gid2, gid1)].area
+      g = mkgap.abscond(area, meang)
+      gap.meang = g
+      gap.gmax = g
+      gap.gmin = g
+      gap.g = g
       gap.rg = interval
       gap.drift=drift
 
@@ -144,7 +146,7 @@ def mknet():
 
   mkcells(gidinfo)
   mkgaps(gidinfo, mkgap.gaps)
-  #setallgaps(30.0, 1000.0, 0.0)
+  setallgaps(30.0, 1000.0, 0.0)
   #special_gap_params()
   h.verifyHalfGap()
 
@@ -170,13 +172,13 @@ def test2():
   pyplot.show()
   pyplot.hist([c.cell.soma.L for c in gidinfo.values()])
   pyplot.show()
-  pyplot.hist([gap.g for gap in mkgap.gaps.values()])
+  pyplot.hist([gap.g for cellinfo in gidinfo.values() for gap in cellinfo.gaps.values()])
   pyplot.show()
 
 if __name__ == '__main__':
   mknet()
   #test1()
-  #test2()
+  test2()
   if pc.nhost() > 1:
     pc.barrier()
     h.quit()
