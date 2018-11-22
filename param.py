@@ -23,17 +23,22 @@
 
 from common import pr
 
-cell_length = 100.
-cell_diameter = 30.
+cell_length = 100. #um
+cell_diameter = 30. #um
+
+# Total gap junction of standard size cell is 30nS
+# Gap junction conductance is disributed evenly over the surface.
+stdcellarea = 2*cell_diameter**2 + 4*cell_diameter*cell_length #um2
+meang = 30 # (nS) over standard cell area
 
 # Overall macroscopic shape
 nominal_height = 50000.
 nominal_base_radius = 15000.
-nominal_thickness = 5000.
+nominal_thickness = 100. # three layers. Should be 5000.
 hole_radius = 500.
 
 # Region discretization
-cellbased = False
+cellbased = True
 layer_surface_circle_distance = cell_diameter if cellbased else 500.
 layer_thickness = cell_diameter if cellbased else 500.
 nominal_region_length = cell_length if cellbased else 500.
@@ -46,7 +51,23 @@ n_layer = int(nominal_thickness/layer_thickness)
 
 abc = (1/nominal_base_radius**2, 1/nominal_base_radius**2, 1/nominal_height)
 
-pr("layer_surface_circle_distance %g" % layer_surface_circle_distance)
-pr("layer_thickness %g" % layer_thickness)
-pr("nominal_region_length %g" % nominal_region_length)
+#pr("layer_surface_circle_distance %g" % layer_surface_circle_distance)
+#pr("layer_thickness %g" % layer_thickness)
+#pr("nominal_region_length %g" % nominal_region_length)
 
+def print_param():
+  import sys
+  types = [type(True), type(1), type(1.0), type((1,2,3))]
+  try:
+    p = sys.modules['param']
+    for name in dir(p):
+      if '__' not in name:
+        val = getattr(p, name)
+        if type(val) in types:
+          pr("%s = %s"%(name, str(val)))
+  except:
+    print 'Error in param.print_param'
+    pass
+
+if __name__ != '__main__':
+  print_param()

@@ -15,7 +15,7 @@ def conductance_density_parabola(ilayer, icircle, ipt):
   return 1.0
 
 def abscond(a, g):
-  return a*g
+  return a*g/param.stdcellarea
 
 def area_circum(ilayer, icircle):
   assert(icircle < ncircle[ilayer] - 1)

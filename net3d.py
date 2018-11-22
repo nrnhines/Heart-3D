@@ -7,6 +7,7 @@ from cellorg import gid2org, xyz
 import mkgap
 from math import pi
 from util import isclose, hash52
+import param
 
 h.load_file("verifygap.hoc")
 
@@ -146,7 +147,7 @@ def mknet():
 
   mkcells(gidinfo)
   mkgaps(gidinfo, mkgap.gaps)
-  setallgaps(30.0, 1000.0, 0.0)
+  setallgaps(param.meang, 1000.0, 0.0)
   #special_gap_params()
   h.verifyHalfGap()
 
@@ -178,7 +179,7 @@ def test2():
 if __name__ == '__main__':
   mknet()
   #test1()
-  test2()
+  #test2()
   if pc.nhost() > 1:
     pc.barrier()
     h.quit()
