@@ -74,7 +74,7 @@ ENDVERBATIM
 	}
 }
 
-FUNCTION getpar() {
+FUNCTION getpar()(ms) {
 	gmax=mynormrand(meang/1(nanosiemens),rg)*1(nanosiemens)
 	if (gmax<0) {gmax=0}
 	if (gmin != 0) {
