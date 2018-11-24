@@ -157,6 +157,20 @@ def mkmodel():
   #snapsh.snapsh_setup()
   ecg.ecg_setup()
 
+def purkstim():
+  r = []
+  if rank == 0:
+    for gid in gidinfo:
+      r.append(gid)
+      for gid2 in gidinfo[gid].gaps:
+        r.append(gid2)
+      break
+  pr("purkstim" + str(r))
+  r = h.Vector(r)
+  pc.broadcast(r, 0)
+  return r
+  
+
 def test1():
   pc.barrier()
   for r in range(nhost):
@@ -180,6 +194,7 @@ if __name__ == '__main__':
   mknet()
   #test1()
   #test2()
+  purkstim()
   if pc.nhost() > 1:
     pc.barrier()
     h.quit()

@@ -29,7 +29,7 @@ cell_diameter = 30. #um
 # Total gap junction of standard size cell is 30nS
 # Gap junction conductance is disributed evenly over the surface.
 stdcellarea = 2*cell_diameter**2 + 4*cell_diameter*cell_length #um2
-meang = 30 # (nS) over standard cell area
+meang = 150 # (nS) over standard cell area
 
 # Overall macroscopic shape
 nominal_height = 50000.
@@ -66,7 +66,7 @@ def print_param():
         if type(val) in types:
           pr("%s = %s"%(name, str(val)))
   except:
-    print 'Error in param.print_param'
+    print ('Error in param.print_param')
     pass
 
 if __name__ != '__main__':

@@ -148,7 +148,7 @@ def gaps_for_gid(gid):
       p0, p1, dens_circle, dens_ipt = (pinfo[0], pinfo[1], icircle, ipt) if jcircle < icircle else (pinfo1[0], pinfo1[1], jcircle, jpt)
       for a1 in angles + [alast]:
         area = side_area(p0, p1, a1 - a0)
-	if area > 1e-9:
+        if area > 1e-9:
           g2 = org2gid(jlayer, jcircle, jpt)
           if g2 > gid:
             #dens_circle, dens_ipt = (icircle, ipt) if jcircle < icircle else (jcircle, jpt)

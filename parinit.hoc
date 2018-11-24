@@ -47,15 +47,15 @@ proc progress() {local pt
 setuptime = startsw() - begintime
 if (pc.id == 0) { printf("setuptime %g\n", startsw() - begintime) }
 
-vrecord(1)
-vrecord(5)
-vrecord(27000)
+//vrecord(1)
+//vrecord(5)
+//vrecord(27000)
 
-{net3d.gj_record(100)}
+//{net3d.gj_record(100)}
 
 prun()
 
-{net3d.ecg.ecgout()}
+//{net3d.ecg.ecgout()}
 
 if (pc.id == 0) {
 	printf("spike2file_time %g\n", spike2file_time)

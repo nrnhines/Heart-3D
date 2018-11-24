@@ -1,6 +1,7 @@
 from neuron import h, gui
 from cellorg import org2gid, xyz, p, nlayer, ncircle, npts, gid2org
 from cellorg import angle2ipt, ipt2angle
+from cellorg import gid_is_simulated
 from morphdef import distance
 
 class View():
@@ -75,7 +76,8 @@ def test2():
   for ilayer in range(1):
     for icircle in range(ncircle[ilayer]):
       for ipt in range(0, npts[ilayer][icircle], 5):
-        pts.append((ilayer, icircle, ipt))
+        if gid_is_simulated(org2gid(ilayer, icircle, ipt)):
+          pts.append((ilayer, icircle, ipt))
   return View(pts)
 
 if __name__ == "__main__":
