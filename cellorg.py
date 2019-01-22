@@ -1,4 +1,4 @@
-from common import timeit, pr
+from common import timeit, pr, pc, rank
 timeit()
 import param as p
 from morphdef import circle_origins
@@ -45,21 +45,59 @@ def circle_discrete(n, pt):
     pts.append((r*cos(a), r*sin(a), z))
   return pts
 
+
 def morphorg():
   csep = p.layer_surface_circle_distance
   dsep = p.layer_thickness
   rstart = p.hole_radius
   zend = p.nominal_height
-  # start with p000 corners
-  paraboloid = [circle_origins(csep, rstart, zend)]
-  for i in range(1, p.n_layer):
-    paraboloid.append(const_sep_layer_origins(i, csep, paraboloid[0][0], zend))
-  # replace p000 corners with (p000, p100) corner pairs.
-  for i in range(p.n_layer):
-    for j, p000 in enumerate(paraboloid[i]):
-      paraboloid[i][j] = (p000, p100from(p000, dsep), RegionFace())
+  #try first from file
+  paraboloid = paraboloid_from_file()
+  if paraboloid is None:
+    # start with p000 corners
+    paraboloid = [circle_origins(csep, rstart, zend)]
+    for i in range(1, p.n_layer):
+      paraboloid.append(const_sep_layer_origins(i, csep, paraboloid[0][0], zend))
+    # replace p000 corners with (p000, p100) corner pairs.
+    for i in range(p.n_layer):
+      for j, p000 in enumerate(paraboloid[i]):
+        paraboloid[i][j] = (p000, p100from(p000, dsep), RegionFace())
+    paraboloid_to_file(paraboloid)
+
   npts = [[circle0_n(o[0]) for o in paraboloid[i]] for i in range(p.n_layer)]
   return paraboloid, npts
+
+def paraboloid_filename():
+  parm=(p.n_layer, p.abc, p.hole_radius, p.nominal_thickness, p.cell_length, p.cell_diameter)
+  return "paraboloid."+str(parm.__hash__()%0xffffffff)
+
+def paraboloid_from_file():
+  if rank == 0:
+    par = None
+    try:
+      import pickle
+      fname = paraboloid_filename()
+      f = open(fname, "rb")
+      par = pickle.load(f)
+      print ("paraboloid read from " + fname)
+    except:
+      print (fname + " does not exist. Will be created")
+  pc.py_broadcast(par, 0)
+  pc.barrier()
+  return par
+
+def paraboloid_to_file(par):
+  if rank == 0:
+    try:
+      import pickle
+      fname = paraboloid_filename()
+      f = open(fname, "wb")
+      pickle.dump(par, f)
+      print ("dumped paraboloid to " + fname)
+    except:
+      print ("could not dump " + fname)
+      pass
+  pc.barrier()
 
 pt2circle_maxiter = 0
 
@@ -322,7 +360,6 @@ def test4():
   # distance between circles as function of surface distance for
   # inner and outemost layers. Also length of cells.
   g1 = h.Graph()
-  g2 = h.Graph()
   #for j, layer in enumerate([0, nlayer-1]):
   for j, layer in enumerate(range(nlayer)):
     p0 = xyz(layer, 0, 0)
@@ -330,7 +367,7 @@ def test4():
     d_circle = [distance(xyz(layer, i, 0), xyz(layer, i-1, 0)) for i in range(1, ncircle[layer])]
     print(d_circle, d_surf)
     h.Vector(d_circle).line(g1, h.Vector(d_surf), j+1, 2)
-  return g1, g2
+  return g1
 
 def test5(): #pt2circle
   from neuron import h, gui
@@ -372,4 +409,4 @@ if __name__ == "__main__":
   #test3(4, 101, 100)
 
   #a = test4()
-  a = test5()
+  #a = test5()
