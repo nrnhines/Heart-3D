@@ -47,6 +47,7 @@ def circle_discrete(n, pt):
 
 
 def morphorg():
+  global paraboloid, ncircle
   csep = p.layer_surface_circle_distance
   dsep = p.layer_thickness
   rstart = p.hole_radius
@@ -58,17 +59,28 @@ def morphorg():
     paraboloid = [circle_origins(csep, rstart, zend)]
     for i in range(1, p.n_layer):
       paraboloid.append(const_sep_layer_origins(i, csep, paraboloid[0][0], zend))
+
     # replace p000 corners with (p000, p100) corner pairs.
     for i in range(p.n_layer):
       for j, p000 in enumerate(paraboloid[i]):
         paraboloid[i][j] = (p000, p100from(p000, dsep), RegionFace())
+
+    # Fill in the RegionFace info of paraboloid
+    ncircle = [len(paraboloid[i]) for i in range(p.n_layer)]
+    for ilayer in range(p.n_layer):
+      for icircle in range(ncircle[ilayer]):
+        fill_interlayer_overlap(paraboloid, ncircle, ilayer, icircle)
+
     paraboloid_to_file(paraboloid)
 
+  else:
+    ncircle = [len(paraboloid[i]) for i in range(p.n_layer)]
+
   npts = [[circle0_n(o[0]) for o in paraboloid[i]] for i in range(p.n_layer)]
-  return paraboloid, npts
+  return paraboloid, npts, ncircle
 
 def paraboloid_filename():
-  parm=(p.n_layer, p.abc, p.hole_radius, p.nominal_thickness, p.cell_length, p.cell_diameter)
+  parm=(p.n_layer, p.abc, p.hole_radius, p.nominal_thickness, p.layer_surface_circle_distance, p.layer_thickness, p.cell_length, p.cell_diameter)
   return "paraboloid."+str(parm.__hash__()%0xffffffff)
 
 def paraboloid_from_file():
@@ -133,10 +145,50 @@ def pt2circle(ilayer, pt, use=0):
   assert(pt[2] >= z - 1e-8)
   return i
 
-paraboloid, npts = morphorg()
+# Interlayer overlap between ilayer, icircle, anything)
+# and the relevant jcircle in jlayer (must be ilayer + 1 or ilayer - 1)
+# Fill in the RegionFace info for both parabola edges.
+# with jcircle, [p, ..] where jcircle identifies
+# the first circle that overlaps icircle and the p are the (r, 0, z)p000
+# for jcircle+1, etc, that are interior to parabola edge.
+# Note that the list is empty if there are no interior points.
+def fill_interlayer_overlap(paraboloid, ncircle, ilayer, icircle):
+  nlayer = p.n_layer
+  if icircle >= ncircle[ilayer] - 1:
+    return # the last circle has no RegionFace
+  o0i = paraboloid[ilayer][icircle]
+  o1i = paraboloid[ilayer][icircle + 1]
+  rf = o0i[2]
+
+  # (i=0,j=1 for jlayer = ilayer - 1) and (i=1,j=0 for jlayer = ilayer + 1)
+  for jlayer in range(ilayer-1, ilayer+2, 2):
+    if jlayer >= 0 and jlayer < nlayer:
+      i,j = (0,1) if jlayer < ilayer else (1,0)
+      nj = ncircle[jlayer]
+      a = o0i[i] # p100i for ilayer
+      b = o1i[i] # p110i
+      # what is jcircle
+      jcircle = pt2circle(jlayer, a, use=j)
+      c = paraboloid[jlayer][jcircle][j] # p000j
+      if c[2] > a[2]:
+        jcircle -= 1
+      result = (jcircle, [])
+      while True:
+        jcircle += 1
+        if (jcircle >= nj):
+          break
+        c = paraboloid[jlayer][jcircle][j]
+        if c[2] >= b[2]:
+          break
+        result[1].append(c)
+      if i == 1:
+        rf.p1b = result
+      else:
+        rf.p0b = result
+
+paraboloid, npts, ncircle = morphorg()
 nlayer = len(paraboloid)
 nlayerpts = [sum(npts[i]) for i in range(p.n_layer)]
-ncircle = [len(paraboloid[i]) for i in range(p.n_layer)]
 ngid = sum(nlayerpts)
 circle_offset = [[0] for i in range(p.n_layer)]
 layer_offset = [0]
@@ -239,51 +291,6 @@ def angle_overlap(pt, jlayer, jcircle):
     result[1].append(aj0)
     
   return result
-
-# Interlayer overlap between ilayer, icircle, anything)
-# and the relevant jcircle in jlayer (must be ilayer + 1 or ilayer - 1)
-# Fill in the RegionFace info for both parabola edges.
-# with jcircle, [p, ..] where jcircle identifies
-# the first circle that overlaps icircle and the p are the (r, 0, z)p000
-# for jcircle+1, etc, that are interior to parabola edge.
-# Note that the list is empty if there are no interior points.
-def fill_interlayer_overlap(paraboloid, ilayer, icircle):
-  if icircle >= ncircle[ilayer] - 1:
-    return # the last circle has no RegionFace
-  o0i = paraboloid[ilayer][icircle]
-  o1i = paraboloid[ilayer][icircle + 1]
-  rf = o0i[2]
-
-  # (i=0,j=1 for jlayer = ilayer - 1) and (i=1,j=0 for jlayer = ilayer + 1)
-  for jlayer in range(ilayer-1, ilayer+2, 2):
-    if jlayer >= 0 and jlayer < nlayer:
-      i,j = (0,1) if jlayer < ilayer else (1,0)
-      nj = ncircle[jlayer]
-      a = o0i[i] # p100i for ilayer
-      b = o1i[i] # p110i
-      # what is jcircle
-      jcircle = pt2circle(jlayer, a, use=j)
-      c = paraboloid[jlayer][jcircle][j] # p000j
-      if c[2] > a[2]:
-        jcircle -= 1
-      result = (jcircle, [])
-      while True:
-        jcircle += 1
-        if (jcircle >= nj):
-          break
-        c = paraboloid[jlayer][jcircle][j]
-        if c[2] >= b[2]:
-          break
-        result[1].append(c)
-      if i == 1:
-        rf.p1b = result
-      else:
-        rf.p0b = result
-
-# Fill in the RegionFace info of paraboloid
-for ilayer in range(nlayer):
-  for icircle in range(ncircle[ilayer]):
-    fill_interlayer_overlap(paraboloid, ilayer, icircle)
 
 def ipt2angle(ipt, ilayer, icircle):
   n = npts[ilayer][icircle]
