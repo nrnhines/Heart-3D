@@ -49,7 +49,7 @@ if (pc.id == 0) { printf("setuptime %g\n", startsw() - begintime) }
 
 //vrecord(1)
 //vrecord(5)
-//vrecord(27000)
+vrecord(3244720)
 
 //{net3d.gj_record(100)}
 
@@ -70,7 +70,7 @@ if (pc.id == 0) {
 //spike2file() // old style in parlib.hoc, different prototype in spike2file.hoc
 //trajec_out("v")
 
-//verifyHalfGap()
+verifyHalfGap()
 
 {pc.runworker()}
 {getstat()}

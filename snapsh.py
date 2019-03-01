@@ -57,6 +57,7 @@ def snapshout():
 
 if __name__ == '__main__':
   # test() invalid test
+  n = len(gidinfo)
   for i in range(n):
     print ("%d %g" %(i, somav_vec.x[i]))
 

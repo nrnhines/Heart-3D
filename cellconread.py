@@ -1,4 +1,5 @@
 from common import h, pc, rank, nhost
+import mkgap
 
 gidinfo = {}
 connections = {}
@@ -32,7 +33,7 @@ def cellconread():
 
 if __name__ == '__main__':
   cellconread()
-  print ("%d %d" % (len(gidinfo), len(mkgap.gaps)))
+  print ("%d %d %d" % (rank, len(gidinfo), len(mkgap.gaps)))
 
 
 

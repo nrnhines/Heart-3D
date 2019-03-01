@@ -22,11 +22,14 @@ def movie(r, g1, g2):
       time.sleep(0.1)
       tt += 1.0
       c = 1 + tt/10.
+      #if int(tt)%50 == 0: g2.erase(); g1.erase()
     g1.mark(x, z, "S", 10, c, 1)
     g2.mark(y, z, "S", 10, c, 1)
 
 if __name__ == "__main__":
   ras = raster("spk000.dat")
   g1 = h.Graph()
+  g1.size(-14000, 15000, 48000, 50000)
   g2 = h.Graph()
+  g2.size(-2000, 2000, 48000, 50000)
   movie(ras, g1, g2)

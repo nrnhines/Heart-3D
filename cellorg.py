@@ -84,8 +84,8 @@ def paraboloid_filename():
   return "paraboloid."+str(parm.__hash__()%0xffffffff)
 
 def paraboloid_from_file():
+  par = None
   if rank == 0:
-    par = None
     try:
       import pickle
       fname = paraboloid_filename()
@@ -94,7 +94,7 @@ def paraboloid_from_file():
       print ("paraboloid read from " + fname)
     except:
       print (fname + " does not exist. Will be created")
-  pc.py_broadcast(par, 0)
+  par = pc.py_broadcast(par, 0)
   pc.barrier()
   return par
 
