@@ -82,7 +82,7 @@ proc position() { local i
 }
 obfunc connect2target() { localobj nc //$o1 target point process, optional $o2 returned NetCon
   soma nc = new NetCon(&v(1), $o1)
-  nc.threshold = 0
+  nc.threshold = -20
   if (numarg() == 2) { $o2 = nc } // for backward compatibility
   return nc
 }
