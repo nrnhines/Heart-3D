@@ -4,7 +4,7 @@
 // all the id, g info to the rank abs(id)%nhost
 
 proc verifyHalfGap() {local i, n \
-  localobj hglist, hg, vcnts, vdispl, idsrc, gsrc, iddest, gdest, s, vsrt, pc
+  localobj hglist, hg, vcnts, vdispl, idsrc, id1src, id2src, id1dest, id2dest, gsrc, iddest, gdest, s, vsrt, pc
 	pc = new ParallelContext()
 	hglist = new List("HalfGap")
 	n = pc.nhost
@@ -18,27 +18,37 @@ proc verifyHalfGap() {local i, n \
 		vdispl.x[i+1] = vdispl.x[i] + vcnts.x[i]
 	}
 	idsrc = new Vector(vdispl.x[n])
+	id1src = new Vector(vdispl.x[n])
+	id2src = new Vector(vdispl.x[n])
 	gsrc = new Vector(vdispl.x[n])
 	for i=0, hglist.count-1 {
 		hg = hglist.o(i)
 		aid = abs(hg.id)
 		j = (aid-1)%n
 		idsrc.x[vdispl.x[j]] = aid
+		id1src.x[vdispl.x[j]] = hg.id1
+		id2src.x[vdispl.x[j]] = hg.id2
 		gsrc.x[vdispl.x[j]] = hg.g
 		vdispl.x[j] += 1
 	}
 
 	iddest = new Vector()
+	id1dest = new Vector()
+	id2dest = new Vector()
 	gdest = new Vector()
 	if (n == 1) {
 		iddest = idsrc.c
 		gdest = gsrc.c
 	}else{
 		pc.alltoall(idsrc, vcnts, iddest)
+		pc.alltoall(id1src, vcnts, id1dest)
+		pc.alltoall(id2src, vcnts, id2dest)
 		pc.alltoall(gsrc, vcnts, gdest)
 	}
 	vsrt = iddest.sortindex
 	idsrc.index(iddest, vsrt)
+	id1src.index(id1dest, vsrt)
+	id2src.index(id2dest, vsrt)
 	gsrc.index(gdest, vsrt)		
 	s = new String()
 	for (i=0; i < idsrc.size; i += 2) {
@@ -54,8 +64,8 @@ sprint(s.s, "More than two HalfGap share the same id %.20g\n", idsrc.x[i])
 		}
 		if (gsrc.x[i] != gsrc.x[i+1]) {
 			s = new String()
-sprint(s.s, "At t=%g, for HalfGap.id %ld, g differs: %.20g %g\n", t, idsrc.x[i],\
-gsrc.x[i], gsrc.x[i+1])
+sprint(s.s, "At t=%g, for HalfGap.id %ld (%d, %d)(%d, %d), g differs: %.20g %g\n", t, idsrc.x[i],\
+id1src.x[i], id2src.x[i], id1src.x[i+1], id2src.x[i+1], gsrc.x[i], gsrc.x[i+1])
 			execerror(s.s)
 		}
 	}

@@ -6,7 +6,7 @@ from gjrecord import gj_record, gj_out
 from cellorg import gid2org, xyz
 import mkgap
 from math import pi
-from util import isclose, hash52
+from util import isclose
 import param
 
 h.load_file("verifygap.hoc")
@@ -52,7 +52,7 @@ def mkgaps(gidinfo, gaps):
   mark = set()
   for gapinfo in gaps.values():
     gg = (gapinfo.gid1, gapinfo.gid2)
-    id = hash52(gg)
+    id = gapinfo.id
     mkhalfgap(gg[0], gg[1], id, gidinfo, mark)
     mkhalfgap(gg[1], gg[0], -id, gidinfo, mark)
   pc.setup_transfer()
@@ -74,6 +74,8 @@ def mkhalfgap(gid1, gid2, id, gidinfo, mark):
     cell = cell1.cell
     gap = h.HalfGap(cell.soma(.5))
     gap.id = id
+    gap.id1 = gid1
+    gap.id2 = gid2
     gap.g = 0.0
     pc.target_var(gap, gap._ref_vgap, gid2)
     assert(gid2 not in cell1.gaps)

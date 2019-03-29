@@ -37,11 +37,15 @@ gaps = {}
 # because of floating round-off error which may or may not create
 # a gap with area close to 0, guarantee gap pairs by only creating 
 # gaps where gid1 < gid2
+# For large models 53 bit hash of (gid1, gid2) sometimes overlap so
+# fill in GapInfo.id using a global sequence after all gid1 < gid2 have
+# been created and before creating the inverse HalfGap
 class GapInfo:
   def __init__(self, gid1, gid2, area):
     assert(gid1 < gid2)
     self.gid1, self.gid2 = (gid1, gid2)
     self.area = area
+    self.id = 0
 
   def __repr__(self):
     return "(%d %d %g)\n" %(self.gid1, self.gid2, self.g)
@@ -54,9 +58,20 @@ def set_gap(g1, g2, area):
     gaps[key] = gap
     return gap;
 
+def gaps_fill_id():
+  # global distinct GapInfo.id by global enumeration of gaps
+  # all GapInfo for the HalfGap with gid1 < gid2 are in existence
+  # The GapInfo copied to ranks where gid2 exists but not gid1 will
+  # will have the same id as well as same conductance.
+  cnts = pc.py_allgather(len(gaps))
+  displ = sum(cnts[0:rank])
+  for i, gi in enumerate(gaps.values()):
+    gi.id = displ + i + 1
+
 #since all GapInfo had gid1 < gid2, ranks with gid2 but not gid1
 #need a copy of the relevant GapInfo. Add to gaps.
 def gaps_gid2_copy():
+  gaps_fill_id()
   if nhost == 1: return
   timeit()
   #assume round robin

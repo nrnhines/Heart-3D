@@ -14,6 +14,7 @@ NEURON {
 		: the voltage polarity. If gmax == gmin, the gap is linear
 		: and id is not used.
 		: in pargap, gmin==gmax (linear) unless gmin is 0.
+	RANGE id1, id2 : debugging
 }
 
 PARAMETER {
@@ -28,6 +29,8 @@ PARAMETER {
 	rt=0
 	event=0 (ms) : when gmax,gmin first assigned from meang,rg
 	id = 0
+	id1 = 0
+	id2 = 0
 }
 
 ASSIGNED {

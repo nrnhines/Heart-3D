@@ -45,7 +45,7 @@ nominal_region_length = cell_length if cellbased else 500.
 
 # Simulate region
 simulation_center = (15000., 0., 50000.) # (x,y,z) coordinate
-simulation_region = 2000. # Only simulate cells closer to simulation_center
+simulation_region = 100000. # Only simulate cells closer to simulation_center
 
 n_layer = int(nominal_thickness/layer_thickness)
 
