@@ -54,7 +54,7 @@ sprint(s.s, "More than two HalfGap share the same id %.20g\n", idsrc.x[i])
 		}
 		if (gsrc.x[i] != gsrc.x[i+1]) {
 			s = new String()
-sprint(s.s, "At t=%g, for HalfGap.id %d, g differs: %.20g %g\n", t, idsrc.x[i],\
+sprint(s.s, "At t=%g, for HalfGap.id %ld, g differs: %.20g %g\n", t, idsrc.x[i],\
 gsrc.x[i], gsrc.x[i+1])
 			execerror(s.s)
 		}
