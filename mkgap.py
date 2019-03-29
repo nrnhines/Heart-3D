@@ -63,11 +63,12 @@ def gaps_gid2_copy():
   have = [None]*nhost
   for gapinfo in gaps.values():
     r = gapinfo.gid2%nhost
-    if r is not rank:
+    if r != rank:
       if have[r] is None:
         have[r] = []
       have[r].append(gapinfo)
   have = pc.py_alltoall(have)
+  assert(have[rank] == None)
   for x in have:
     for gi in (x if x is not None else []):
       assert ((gi.gid1, gi.gid2) not in gaps)
