@@ -48,7 +48,7 @@ class GapInfo:
     self.id = 0
 
   def __repr__(self):
-    return "(%d %d %g)\n" %(self.gid1, self.gid2, self.g)
+    return "(%d %d %g)\n" %(self.gid1, self.gid2, self.area)
 
 def set_gap(g1, g2, area):
     assert(g1 < g2)
@@ -211,6 +211,13 @@ def cell_side_areas(gid):
       side_areas.append(area)
 
   return side_areas
+
+def gid_gaps(gid):
+  gs = []
+  for gap in gaps.values():
+    if gid == gap.gid1 or gid == gap.gid2:
+      gs.append(gap)
+  return gs
 
 def test1(ilayer, icircle, ipt):
   print (gaps_for_gid(org2gid(ilayer, icircle, ipt)))

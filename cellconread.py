@@ -11,7 +11,7 @@ def gid2rank(gid): # RR distribution
 
 def cellconread():
   # new Heart-3D paraboloid organization
-  global ncon, ncell
+  global ncon, ncell, connections
   import cellorg, mkgap
 
   ncell = cellorg.ngid
