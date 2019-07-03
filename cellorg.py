@@ -29,6 +29,9 @@ class RegionFace:
     # be no breakpoints and jcircle is the first circle in the adjacent layer
     # that is relevant to gap connectivity.
 
+  def __str__(self):
+    return "<RegionFace %s %s>" % (str(self.p0b), str(self.p1b))
+
 # return number of points on circle
 def circle0_n(pt):
   c = 2.*pi*pt[0]
