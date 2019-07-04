@@ -159,10 +159,26 @@ def mkmodel():
   #snapsh.snapsh_setup()
   ecg.ecg_setup()
 
+# all cells in last circle of layer 0
+def circlestim():
+  from cellorg import nlayer, ncircle, npts, org2gid
+  r = []
+  ilayer = 0
+  for icircle in range(ncircle[ilayer])[-2:]:
+    npt = npts[ilayer][icircle]
+    for ipt in range(npt):
+      r.append(org2gid(ilayer, icircle, ipt))
+    if rank == 0:
+      print ("circlestim (%d %d [0:%d])" % (ilayer, icircle, npt))
+  r = h.Vector(r)
+  return r
+
+
+# first gid in gidinfo of rank 1 and all its adjacent gids.
 def purkstim():
   r = []
   if rank == 0:
-    for gid in gidinfo:
+    for gid in gidinfo: # break, so just the first and all its connections
       r.append(gid)
       for gid2 in gidinfo[gid].gaps:
         r.append(gid2)
@@ -196,7 +212,8 @@ if __name__ == '__main__':
   mknet()
   #test1()
   #test2()
-  purkstim()
+  #purkstim()
+  circlestim()
   if pc.nhost() > 1:
     pc.barrier()
     h.quit()

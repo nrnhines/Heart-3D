@@ -32,7 +32,8 @@ ms2fill(ms2)
 
 proc purkstim() {local i, gid  localobj f, s
   f = new PythonObject()
-  f = f.net3d.purkstim() // Vector of gid
+//  f = f.net3d.purkstim() // Vector of gid
+  f = f.net3d.circlestim() // Vector of gid
   mslist = new List()
 //  f = new File("../heart3d/Purkinje_Cells.txt")
 //  f.ropen()
