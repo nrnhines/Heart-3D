@@ -161,6 +161,7 @@ def mkmodel():
 
 # all cells in last circle of layer 0
 def circlestim():
+  return vertstim()
   from cellorg import nlayer, ncircle, npts, org2gid
   r = []
   ilayer = 0
@@ -173,6 +174,18 @@ def circlestim():
   r = h.Vector(r)
   return r
 
+# all ipt=0 cells in all circles of layer 0
+def vertstim():
+  from cellorg import nlayer, ncircle, npts, org2gid
+  r = []
+  ilayer = 0
+  for icircle in range(ncircle[ilayer]):
+    for ipt in range(2):
+      r.append(org2gid(ilayer, icircle, ipt))
+  if rank == 0:
+    print ("vertstim (%d [0:%d] [0,1])" % (ilayer, ncircle[ilayer]))
+  r = h.Vector(r)
+  return r
 
 # first gid in gidinfo of rank 1 and all its adjacent gids.
 def purkstim():
