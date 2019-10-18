@@ -200,6 +200,12 @@ for ilayer in range(p.n_layer):
     circle_offset[ilayer].append(circle_offset[ilayer][-1] + npt)
   layer_offset.append(layer_offset[-1] + circle_offset[ilayer][-1])
 
+# simulation range limits for layers, circles
+sim_layers = range(nlayer)[p.simulation_layers[0]:p.simulation_layers[1]]
+sim_circles = []
+for ilayer in sim_layers:
+  sim_circles.append(range(ncircle[ilayer])[p.simulation_circles[0]:p.simulation_circles[1]])
+
 timeit("abstract model definition")
 pr("ngid = %d"%ngid)
 
@@ -246,10 +252,20 @@ def gid2org_help_circle(ilayer, r): # return last i where circle_offset[i] <= r
   return i
 
 def gid_is_simulated(gid):
-  return is_simulated(xyz(*gid2org(gid)))
+  #return is_simulated(xyz(*gid2org(gid)))
+  return is_simulated(*gid2org(gid))
 
-def is_simulated(xyz):
-    return distance(xyz, p.simulation_center) < p.simulation_region
+def is_in(i, pair):
+  return i >= pair[0] and i < pair[1]
+
+def is_simulated(ilayer,icircle, ipt):
+  #return distance(xyz, p.simulation_center) < p.simulation_region
+  if is_in(ilayer, (sim_layers[0], sim_layers[-1]+1)):
+    if is_in(icircle, (sim_circles[ilayer][0], sim_circles[ilayer][-1]+1)):
+      deg = ipt2angle(ipt, ilayer, icircle)*360/(2*pi)
+      if is_in(deg, p.simulation_angledeg):
+        return True
+  return False
 
 def xyz(ilayer, icircle, ipt): # note that ipt refers to the proximal point on the section
   n = npts[ilayer][icircle]

@@ -75,7 +75,7 @@ def test3(): # x, z slice through ipt = 0 (using RegionFace)
   g.view(2)
   for ilayer in range(nlayer):
     for icircle in range(ncircle[ilayer] - 1):
-     if is_simulated(xyz(ilayer, icircle, 0)):
+     if is_simulated(ilayer, icircle, 0):
       c = cellcorners(ilayer, icircle, 0)
       rf = paraboloid[ilayer][icircle][2]
       b0 = rf.p0b[1] if rf and rf.p0b else []

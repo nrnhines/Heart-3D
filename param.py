@@ -34,7 +34,7 @@ meang = 150 # (nS) over standard cell area
 # Overall macroscopic shape
 nominal_height = 50000.
 nominal_base_radius = 15000.
-nominal_thickness = 100. # three layers. Should be 5000.
+nominal_thickness = 30. #100. # three layers. Should be 5000.
 hole_radius = 500.
 
 # Region discretization
@@ -43,11 +43,15 @@ layer_surface_circle_distance = cell_diameter if cellbased else 500.
 layer_thickness = cell_diameter if cellbased else 500.
 nominal_region_length = cell_length if cellbased else 500.
 
+n_layer = int(nominal_thickness/layer_thickness)
+
 # Simulate region
 simulation_center = (15000., 0., 50000.) # (x,y,z) coordinate
 simulation_region = 100000. # Only simulate cells closer to simulation_center
 
-n_layer = int(nominal_thickness/layer_thickness)
+simulation_layers = (0, 1) # just 0 layer
+simulation_circles = (-500, None) # last 500 circles
+simulation_angledeg = (0., 90.) # quarter of the circumference
 
 abc = (1/nominal_base_radius**2, 1/nominal_base_radius**2, 1/nominal_height)
 
