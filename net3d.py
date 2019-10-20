@@ -3,7 +3,7 @@ from cellconread import cellconread, gidinfo, connections, ncell, ncon
 import snapsh
 import ecg
 from gjrecord import gj_record, gj_out
-from cellorg import gid2org, xyz
+from cellorg import gid2org, xyz, nlayer, ncircle, npts
 import mkgap
 from math import pi
 from util import isclose
@@ -128,17 +128,37 @@ def special_gap_params2(i, info, gidpair2ncon):
     gap.drift=drift
 
 def setallgaps(meang, interval, drift):
+  npurkgap = 0
   for gid1, cellinfo in gidinfo.items():
     for gid2, gap in cellinfo.gaps.items():
-      area = mkgap.gaps[(gid1, gid2) if gid1 < gid2 else (gid2, gid1)].area
+      gapinfo = mkgap.gaps[(gid1, gid2) if gid1 < gid2 else (gid2, gid1)]
+      area = gapinfo.area
       g = mkgap.abscond(area, meang)
+      if is_purkinje_gap(gapinfo.gid1, gapinfo.gid2):
+        g *= param.purkinje_gap_factor
+        npurkgap += 1
       gap.meang = g
       gap.gmax = g
       gap.gmin = g
       gap.g = g
       gap.rg = interval
       gap.drift=drift
+  npurkgap = pc.allreduce(npurkgap, 1)
+  pr("number of purkinje gaps is %d" % (npurkgap/2))
 
+def is_purkinje_gap(gid1, gid2):
+  # purkinje cells are in line from base to tip at ipt[-2:2] of layer 0
+  ilayer1, icircle1, ipt1 = gid2org(gid1)
+  if ilayer1 > 0:
+    return False
+  if ipt1 > 2 and ipt1 <= npts[ilayer1][icircle1] - 2:
+    return False
+  ilayer2, icircle2, ipt2 = gid2org(gid2)
+  if ilayer1 > 0:
+    return False
+  if ipt2 > 2 and ipt2 <= npts[ilayer2][icircle2] - 2:
+    return False
+  return True
 
 def mknet():
   h.load_file("cell.hoc")
@@ -161,7 +181,7 @@ def mkmodel():
 
 # all cells in last circle of layer 0
 def circlestim():
-  return vertstim()
+  #return vertstim()
   from cellorg import nlayer, ncircle, npts, org2gid
   r = []
   ilayer = 0

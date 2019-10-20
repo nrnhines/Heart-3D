@@ -30,6 +30,7 @@ cell_diameter = 30. #um
 # Gap junction conductance is disributed evenly over the surface.
 stdcellarea = 2*cell_diameter**2 + 4*cell_diameter*cell_length #um2
 meang = 150 # (nS) over standard cell area
+purkinje_gap_factor = 20 # this much larger than gap between regular cells.
 
 # Overall macroscopic shape
 nominal_height = 50000.
