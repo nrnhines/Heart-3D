@@ -140,8 +140,6 @@ def setallgaps(meang, interval, drift):
       if is_purkinje_gap(gapinfo.gid1, gapinfo.gid2):
         g *= param.purkinje_gap_factor
         cellinfo.is_purk = True
-        if gid2 in gidinfo:
-          gidinfo[gid2].is_purk = True
         npurkgap += 1
       gap.meang = g
       gap.gmax = g
