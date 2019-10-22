@@ -42,7 +42,7 @@ default_var("ms2row", 2) // like msrow
 default_var("ms2col", 2) // like mscol
 default_var("ms2del", 100) // (ms)
 default_var("ms2dur",5) // (msec)
-default_var("ms2amp", 4) // (nA)
+default_var("ms2amp", 500) // (nA)
 default_var("ms2del1", 800) // (msec)
 default_var("ms2n", 200) // (1)
 

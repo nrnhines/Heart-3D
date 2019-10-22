@@ -1,4 +1,3 @@
-
 # Internal Paraboloid surface is a*x**2 + b*y**2 - c*z = 0
 # with 1/a = 15000**2, 1/b=15000^2, and 1/c=50000 (numbers are microns)
 # The total thickness from inner to outer surface is "nominal_thickness"
@@ -35,7 +34,7 @@ hole_radius = 500.
 # Total gap junction of standard size cell is 30nS
 # Gap junction conductance is disributed evenly over the surface.
 stdcellarea = 2*cell_diameter**2 + 4*cell_diameter*cell_length #um2
-meang = 150 # (nS) over standard cell area
+meang = 1500 # (nS) over standard cell area
 purkinje_gap_factor = 20 # this much larger than gap between regular cells.
 
 # see purkspec.py about list of "rectangles" defined as
@@ -60,7 +59,7 @@ simulation_center = (15000., 0., 50000.) # (x,y,z) coordinate
 simulation_region = 100000. # Only simulate cells closer to simulation_center
 
 simulation_layers = (0, 1) # just 0 layer
-simulation_circles = (-500, None) # last 500 circles
+simulation_circles = (0, None) # all circles
 simulation_angledeg = (0., 90.) # quarter of the circumference
 
 abc = (1/nominal_base_radius**2, 1/nominal_base_radius**2, 1/nominal_height)
