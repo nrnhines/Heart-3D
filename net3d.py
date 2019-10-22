@@ -1,5 +1,6 @@
 from common import h, pc, rank, nhost, timeit, pr
 from cellconread import cellconread, gidinfo, connections, ncell, ncon
+from purkspec import is_purkinje_gap
 
 import snapsh
 import ecg

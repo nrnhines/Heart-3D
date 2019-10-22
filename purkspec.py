@@ -49,7 +49,7 @@ for p in purkinje_spec:
   pspec.append([circles, pts])
 
 def is_purkinje_gap(gid1, gid2):
-  return in_purkspec(gid2org(gid1)) and in_purkspec(gid2org(gid2))
+  return in_purkspec(*gid2org(gid1)) and in_purkspec(*gid2org(gid2))
 
 def in_purkspec(ilayer, icircle, ipt):
   if ilayer != 0:
