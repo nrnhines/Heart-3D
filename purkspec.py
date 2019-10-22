@@ -85,6 +85,7 @@ def draw_cell(g, x, y):
   g.flush()
 
 if __name__ == "__main__":
+  from neuron import gui
   print("purkinje_spec ", purkinje_spec)
   g = show()
   #print("pspec", pspec)
