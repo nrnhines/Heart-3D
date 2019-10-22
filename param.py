@@ -26,17 +26,26 @@ from common import pr
 cell_length = 100. #um
 cell_diameter = 30. #um
 
+# Overall macroscopic shape
+nominal_height = 50000.
+nominal_base_radius = 15000.
+nominal_thickness = 30. #100. # three layers. Should be 5000.
+hole_radius = 500.
+
 # Total gap junction of standard size cell is 30nS
 # Gap junction conductance is disributed evenly over the surface.
 stdcellarea = 2*cell_diameter**2 + 4*cell_diameter*cell_length #um2
 meang = 150 # (nS) over standard cell area
 purkinje_gap_factor = 20 # this much larger than gap between regular cells.
 
-# Overall macroscopic shape
-nominal_height = 50000.
-nominal_base_radius = 15000.
-nominal_thickness = 30. #100. # three layers. Should be 5000.
-hole_radius = 500.
+# see purkspec.py about list of "rectangles" defined as
+# ((angle, n), (bottom, top))
+purkinje_spec = [
+  ((0, 3), (0, -1)), # three cells wide from bottom to top at angle 0
+  ((180, 3), (0, -300)),
+  ((0, 200), (800, 802)), # know that the npts[0][800] = 617
+  ((180, 100), (500, 502))# know that npts[0][500] = 476
+]
 
 # Region discretization
 cellbased = True
@@ -68,7 +77,7 @@ def print_param():
     for name in dir(p):
       if '__' not in name:
         val = getattr(p, name)
-        if type(val) in types:
+        if type(val) in types or "purkinje_spec" in name:
           pr("%s = %s"%(name, str(val)))
   except:
     print ('Error in param.print_param')

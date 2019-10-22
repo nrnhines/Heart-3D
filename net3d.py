@@ -1,5 +1,6 @@
 from common import h, pc, rank, nhost, timeit, pr
 from cellconread import cellconread, gidinfo, connections, ncell, ncon
+
 import snapsh
 import ecg
 from gjrecord import gj_record, gj_out
@@ -145,20 +146,6 @@ def setallgaps(meang, interval, drift):
       gap.drift=drift
   npurkgap = pc.allreduce(npurkgap, 1)
   pr("number of purkinje gaps is %d" % (npurkgap/2))
-
-def is_purkinje_gap(gid1, gid2):
-  # purkinje cells are in line from base to tip at ipt[-2:2] of layer 0
-  ilayer1, icircle1, ipt1 = gid2org(gid1)
-  if ilayer1 > 0:
-    return False
-  if ipt1 > 2 and ipt1 <= npts[ilayer1][icircle1] - 2:
-    return False
-  ilayer2, icircle2, ipt2 = gid2org(gid2)
-  if ilayer1 > 0:
-    return False
-  if ipt2 > 2 and ipt2 <= npts[ilayer2][icircle2] - 2:
-    return False
-  return True
 
 def mknet():
   h.load_file("cell.hoc")
