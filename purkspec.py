@@ -42,7 +42,7 @@ for p in purkinje_spec:
 
   for icircle in range(circles[0], circles[1]+1):
     npoint = npts[0][icircle]
-    first = int(angle/360*npoint)
+    first = int(angle/360.*npoint)
     last = (first + n - 1)%npoint
     pts.append((first, last)) # last may be less than first, that is ok.
 
