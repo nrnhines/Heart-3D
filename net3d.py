@@ -17,6 +17,7 @@ class CellInfo:
   def __init__(self, cell):
     self.cell = cell
     self.gaps = {} # srcgid:HalfGap
+    self.is_purk = False
 
 def mkcells(gidinfo):
   timeit()
@@ -138,6 +139,9 @@ def setallgaps(meang, interval, drift):
       g = mkgap.abscond(area, meang)
       if is_purkinje_gap(gapinfo.gid1, gapinfo.gid2):
         g *= param.purkinje_gap_factor
+        cellinfo.is_purk = True
+        if gid2 in gidinfo:
+          gidinfo[gid2].is_purk = True
         npurkgap += 1
       gap.meang = g
       gap.gmax = g
@@ -228,6 +232,15 @@ def test2():
   pyplot.show()
   pyplot.hist([gap.g for cellinfo in gidinfo.values() for gap in cellinfo.gaps.values()])
   pyplot.show()
+
+def showpurk(): # only for nhost=1
+  global g
+  g = h.Graph()
+  g.size(0, npts[0][-1], 0, ncircle[0])
+  for gid, ci in gidinfo.items():
+    if ci.is_purk:
+      ilayer, icircle, ipt = gid2org(gid)
+      g.mark(ipt, icircle, "S", 10)
 
 if __name__ == '__main__':
   mknet()
