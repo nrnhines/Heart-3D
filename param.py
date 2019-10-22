@@ -41,9 +41,12 @@ purkinje_gap_factor = 20 # this much larger than gap between regular cells.
 # ((angle, n), (bottom, top))
 purkinje_spec = [
   ((0, 3), (0, -1)), # three cells wide from bottom to top at angle 0
-  ((180, 3), (0, -300)),
-  ((0, 200), (800, 802)), # know that the npts[0][800] = 617
-  ((180, 100), (500, 502))# know that npts[0][500] = 476
+    ((0, 120), (1200, 1202)), # npts[0][1200] = 768
+    ((0, 120), (800, 802)), # know that the npts[0][800] = 617
+    ((0, 100), (500, 502)), # know that npts[0][500] = 476
+  ((180, 3), (0, -300)), # vertical line at opposite side
+    ((180, 200), (800, 802)), # know that the npts[0][800] = 617
+    ((180, 100), (500, 502)), # know that npts[0][500] = 476
 ]
 
 # Region discretization
