@@ -1,5 +1,6 @@
-from common import h, pc, rank, nhost
+from common import h, pc, rank, nhost, timeit, pr
 from math import pi
+from util import n_triang_zero
 import mkgap
 
 gidinfo = {}
@@ -11,6 +12,7 @@ def gid2rank(gid): # RR distribution
   return gid%nhost
 
 def cellconread():
+  timeit()
   # new Heart-3D paraboloid organization
   global ncon, ncell, connections
   import cellorg, mkgap
@@ -36,12 +38,17 @@ def cellconread():
           if gid%nhost == rank:
             gidinfo[gid] = cellorg.xyz(ilayer, icircle, ipt)
   '''
+  timeit("gidinfo setup")
 
   for gid in gidinfo:
     # because of floating round-off error which may or may not create
     # a gap with area close to 0, guarantee gap pairs by only creating
     # gaps where gid1 < gid2
     mkgap.gaps_for_gid(gid)
+  n = int(pc.allreduce(n_triang_zero(), 1))
+  pr("accurate_triang_area calculation returned zero %d times" % n)
+  timeit("connections determined")
+
   # for parallel, copy gid2 gaps to ranks that need them
   mkgap.gaps_gid2_copy()
   connections = mkgap.gaps
@@ -49,18 +56,3 @@ def cellconread():
 if __name__ == '__main__':
   cellconread()
   print ("%d %d %d" % (rank, len(gidinfo), len(mkgap.gaps)))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

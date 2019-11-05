@@ -22,16 +22,25 @@ def area3pt(pts):
   d = [distance(pts[i], pts[(i+1)%3]) for i in range(3)]
   return accurate_triangle_area(*d)
 
+n_triang_zero_ = 0
 def accurate_triangle_area(x, y, z):
+  global n_triang_zero_
   # x,y,z sides of triangle
   # from http://http.cs.berkeley.edu/~wkahan/Triangle.pdf
   # W. Kahan
   a = [x, y, z]
   a.sort()
-  assert ((a[0] - (a[2] - a[1])) > 0)
-  x = .25*sqrt((a[2]+(a[1]+a[0])) * (a[0]-(a[2]-a[1])) \
-    * (a[0]+(a[2]-a[1])) * (a[2]+(a[1]-a[0])))
-  return x
+  if (a[0] - (a[2] - a[1])) > 0:
+    x = .25*sqrt((a[2]+(a[1]+a[0])) * (a[0]-(a[2]-a[1])) \
+      * (a[0]+(a[2]-a[1])) * (a[2]+(a[1]-a[0])))
+    return x
+  #print("accurate_triangle_area: not a triangle: " + str(a))
+  #assert((a[0] - (a[2] - a[1])) > 0)
+  n_triang_zero_ += 1
+  return 0.0
+
+def n_triang_zero():
+  return n_triang_zero_
 
 def frustum_area(h, r1, r2):
   return pi*(r1 + r2)*sqrt((r1 - r2)**2 + h**2)
