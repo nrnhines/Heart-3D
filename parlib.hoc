@@ -122,8 +122,16 @@ proc perf2file() { local i  localobj perf
 objref trajec_list, trajec_id
 trajec_id = new Vector()
 trajec_list = new List()
-proc vrecord() { local gid  localobj cell, vec
-	gid =  $1
+proc vrecord() { local gid , a localobj cell, vec
+        gid =  $1
+        a = pc.reduce(pc.gid_exists(gid) != 0, 1)  
+        if (pc.id == 0) {         
+                printf("vrecord gid=%d #ranks that it exists = %d\n",gid,a)
+        }
+        if (a == 0) {
+                pc.barrier()
+                quit()
+        }
 	if (!pc.gid_exists(gid)) return
 printf("%d vrecord %d gid=%d\n", pc.id, $1, gid)
 	cell = pc.gid2cell(gid)
