@@ -124,7 +124,7 @@ trajec_id = new Vector()
 trajec_list = new List()
 proc vrecord() { local gid , a localobj cell, vec
         gid =  $1
-        a = pc.reduce(pc.gid_exists(gid) != 0, 1)  
+        a = pc.allreduce(pc.gid_exists(gid) != 0, 1)  
         if (pc.id == 0) {         
                 printf("vrecord gid=%d #ranks that it exists = %d\n",gid,a)
         }
